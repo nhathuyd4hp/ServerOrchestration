@@ -1,0 +1,29 @@
+[project]
+name = "taskdistribution"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "alembic>=1.17.2",
+    "apscheduler>=3.11.1",
+    "celery>=5.6.0",
+    "cryptography>=46.0.3",
+    "easyocr>=1.7.2",
+    "fastapi[standard]>=0.121.3",
+    "minio>=7.2.20",
+    "openpyxl>=3.1.5",
+    "pandas>=2.3.3",
+    "pdf2image>=1.17.0",
+    "playwright>=1.56.0",
+    "pre-commit>=4.5.0",
+    "pydantic-settings>=2.12.0",
+    "pymysql>=1.1.2",
+    "pytesseract>=0.3.13",
+    "pywinauto>=0.6.9",
+    "redis>=7.1.0",
+    "sqlmodel>=0.0.27",
+    "torch>=2.9.1",
+    "transformers>=4.57.3",
+    "xlwings>=0.33.16",
+]
