@@ -1,10 +1,11 @@
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.triggers.cron import CronTrigger
-from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect,BackgroundTasks
 from fastapi.responses import JSONResponse
 from sqlmodel import Session
 
+from src.api.common.response import SuccessResponse
 from src.api.middleware import GlobalExceptionMiddleware
 from src.api.router import api
 from src.core.config import settings
@@ -67,6 +68,10 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
+@app.post("/broadcast")
+async def websocket_endpoint(message:str, task: BackgroundTasks):
+    task.add_task(manager.broadcast,message)
+    return SuccessResponse(data=message)
 
 # Handle Exception
 @app.exception_handler(HTTPException)
