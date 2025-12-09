@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-
+from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.triggers.cron import CronTrigger
 from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
@@ -47,6 +47,13 @@ app = FastAPI(
     lifespan=lifespan,
 )
 app.add_middleware(GlobalExceptionMiddleware)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True, # Cho phép cookies/headers ủy quyền
+    allow_methods=["*"],    # Cho phép tất cả các phương thức HTTP (GET, POST, PUT, DELETE, v.v.)
+    allow_headers=["*"],    # Cho phép tất cả các tiêu đề HTTP
+)
 
 app.include_router(api, prefix=settings.ROOT_PATH)
 
