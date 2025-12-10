@@ -65,7 +65,7 @@ def shiga_toyo_chiba(process_date: date | str):
         CLIENT_SECRET=settings.API_SHAREPOINT_CLIENT_SECRET,
     )
     if isinstance(process_date, str):
-        process_date = datetime.strptime(process_date, "%Y/%m/%d").date()
+        process_date = datetime.strptime(process_date, "%Y-%m-%d %H:%M:%S.%f").date()
     # ---- File Data
     FileData = f"DataShigaToyoChiba{process_date.strftime("%m-%d")}.xlsx"
     # ---- UP site
