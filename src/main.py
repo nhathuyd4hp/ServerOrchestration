@@ -1,7 +1,10 @@
-from contextlib import asynccontextmanager
-from fastapi.middleware.cors import CORSMiddleware
+import asyncio
+from contextlib import asynccontextmanager, suppress
+
+import redis.asyncio as redis
 from apscheduler.triggers.cron import CronTrigger
-from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect,BackgroundTasks
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlmodel import Session
 
@@ -15,30 +18,41 @@ from src.socket import manager
 from src.worker import Worker
 
 
+async def subscriber():
+    r = redis.Redis(host="192.168.0.146", port=6379, db=0)
+    p = r.pubsub()
+    await p.subscribe("CELERY")
+    async for message in p.listen():
+        await manager.broadcast(message["data"])
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    task = asyncio.create_task(subscriber())
     # --- Scheduler --- #
     with Session(settings.db_engine) as session:
         schedules = ScheduleService(session).findMany()
         for schedule in schedules:
-            scheduler.add_job(
-                id=schedule.id,
-                func=Worker.send_task,
-                args=(schedule.robot,),
-                trigger=CronTrigger(
-                    hour=schedule.hour,
-                    minute=schedule.minute,
-                    day_of_week=schedule.day_of_week,
-                    start_date=schedule.start_date,
-                    end_date=schedule.end_date,
-                ),
-            )
+            with suppress(Exception):
+                scheduler.add_job(
+                    id=schedule.id,
+                    func=Worker.send_task,
+                    args=(schedule.robot,),
+                    trigger=CronTrigger(
+                        hour=schedule.hour,
+                        minute=schedule.minute,
+                        day_of_week=schedule.day_of_week,
+                        start_date=schedule.start_date,
+                        end_date=schedule.end_date,
+                    ),
+                )
     scheduler.start()
     app.state.scheduler = scheduler
     # --- MinIO --- #
     if not ResultService.bucket_exists(settings.MINIO_BUCKET):
         ResultService.make_bucket(settings.MINIO_BUCKET)
     yield
+    task.cancel()
     scheduler.shutdown()
 
 
@@ -50,10 +64,10 @@ app = FastAPI(
 app.add_middleware(GlobalExceptionMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['*'],
-    allow_credentials=True, # Cho phép cookies/headers ủy quyền
-    allow_methods=["*"],    # Cho phép tất cả các phương thức HTTP (GET, POST, PUT, DELETE, v.v.)
-    allow_headers=["*"],    # Cho phép tất cả các tiêu đề HTTP
+    allow_origins=["*"],
+    allow_credentials=True,  # Cho phép cookies/headers ủy quyền
+    allow_methods=["*"],  # Cho phép tất cả các phương thức HTTP (GET, POST, PUT, DELETE, v.v.)
+    allow_headers=["*"],  # Cho phép tất cả các tiêu đề HTTP
 )
 
 app.include_router(api, prefix=settings.ROOT_PATH)
@@ -68,10 +82,12 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
-@app.post("/broadcast")
-async def websocket_endpoint(message:str, task: BackgroundTasks):
-    task.add_task(manager.broadcast,message)
+
+@app.post(path="/broadcast", tags=["WebSocket"])
+async def broadcast_message(message: str, task: BackgroundTasks):
+    task.add_task(manager.broadcast, message)
     return SuccessResponse(data=message)
+
 
 # Handle Exception
 @app.exception_handler(HTTPException)

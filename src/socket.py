@@ -1,4 +1,3 @@
-from contextlib import suppress
 from typing import List
 
 from fastapi import WebSocket
@@ -17,8 +16,10 @@ class ConnectionManager:
 
     async def broadcast(self, message: str):
         for connection in self.active_connections:
-            with suppress(Exception):
+            try:
                 await connection.send_text(message)
+            except Exception:
+                pass
 
 
 manager = ConnectionManager()

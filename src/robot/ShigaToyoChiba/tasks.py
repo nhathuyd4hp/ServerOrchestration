@@ -1,7 +1,7 @@
-import shutil
-import threading
 import os
 import re
+import shutil
+import threading
 from datetime import date, datetime
 
 import pandas as pd
@@ -14,10 +14,13 @@ from src.core.config import settings
 from src.robot.ShigaToyoChiba.api import APISharePoint
 from src.robot.ShigaToyoChiba.automation import SharePoint, WebAccess
 
-def Fname(path:str):
-    from pywinauto.application import Application
-    from pywinauto import Desktop
+
+def Fname(path: str):
     import time
+
+    from pywinauto import Desktop
+    from pywinauto.application import Application
+
     while True:
         found = False
         for win in Desktop(backend="win32").windows():
@@ -30,7 +33,7 @@ def Fname(path:str):
     while True:
         app = Application(backend="win32").connect(title_re="Browse")
         dialog = app.window(title_re="Browse")
-        dialog.wait("ready",timeout=10)
+        dialog.wait("ready", timeout=10)
         root_window: int = dialog.handle
         AddressInput = dialog.child_window(
             class_name="Edit",
@@ -52,6 +55,7 @@ def Fname(path:str):
             continue
         else:
             break
+
 
 @shared_task
 def shiga_toyo_chiba(process_date: date | str):
@@ -233,7 +237,7 @@ def shiga_toyo_chiba(process_date: date | str):
                     #         data=[["Tên folder có ghi ngày"]],
                     #     )
                     #     break
-                    shutil.rmtree(f"downloads/ShigaToyoChiba/{row['案件番号']}",ignore_errors=True)
+                    shutil.rmtree(f"downloads/ShigaToyoChiba/{row['案件番号']}", ignore_errors=True)
                     downloads = sp.download(
                         url=url,
                         file=re.compile(r".*\.(xls|xlsx|xlsm|xlsb|xml|xlt|xltx|xltm|xlam|pdf)$", re.IGNORECASE),
@@ -308,29 +312,31 @@ def shiga_toyo_chiba(process_date: date | str):
                     # --- Kiểm tra macro
                     # ---- Chia dữ liệu thành 2 folder Excel / PDF
                     base_path = os.path.dirname(downloads[0])
-                    os.makedirs(os.path.join(base_path,"excel"),exist_ok=True)
-                    os.makedirs(os.path.join(base_path,"pdf"),exist_ok=True)
+                    os.makedirs(os.path.join(base_path, "excel"), exist_ok=True)
+                    os.makedirs(os.path.join(base_path, "pdf"), exist_ok=True)
                     while True:
                         for download in downloads:
                             f = os.path.basename(download)
                             if re.compile(r".*\.(xls|xlsx|xlsm|xlsb|xml|xlt|xltx|xltm|xlam)$", re.IGNORECASE).match(f):
                                 shutil.move(
-                                    src = download,
-                                    dst = os.path.join(os.path.dirname(downloads[0]),"excel"),
+                                    src=download,
+                                    dst=os.path.join(os.path.dirname(downloads[0]), "excel"),
                                 )
                             else:
                                 shutil.move(
-                                    src = download,
-                                    dst = os.path.join(os.path.dirname(downloads[0]),"pdf"),
+                                    src=download,
+                                    dst=os.path.join(os.path.dirname(downloads[0]), "pdf"),
                                 )
-                        if os.listdir(base_path) == ['excel', 'pdf']:
-                            break                      
+                        if os.listdir(base_path) == ["excel", "pdf"]:
+                            break
                     try:
                         with FileLock("macro.lock", timeout=300):
                             app = xw.App(visible=False)
                             macro_file = "src/robot/ShigaToyoChiba/resource/マクロチェック(240819ver).xlsm"
                             wb_macro = app.books.open(macro_file)
-                            threading.Thread(target=Fname,args=(os.path.abspath(os.path.join(base_path,"excel")),)).start()
+                            threading.Thread(
+                                target=Fname, args=(os.path.abspath(os.path.join(base_path, "excel")),)
+                            ).start()
                             wb_macro.macro("Fname")()
                             # Fopen
                             wb_macro.macro("Fopen")()
@@ -348,38 +354,35 @@ def shiga_toyo_chiba(process_date: date | str):
                         break
                     # --- Upload Data
                     if row["出荷工場"] == "滋賀":  # Shiga
-                        pass
-                        # sp.upload(
-                        #     url="https://nskkogyo.sharepoint.com/sites/shiga/Shared Documents/Forms/AllItems.aspx?id=/sites/shiga/Shared Documents/滋賀工場 製造データ",  # noqa
-                        #     files=downloads,
-                        #     steps=[
-                        #         re.compile(
-                        #             rf"(?:{process_date.month}|{process_date.month:02d})月(?:{process_date.day}|{process_date.day:02d})日配送分"
-                        #         )
-                        #     ],
-                        # )
+                        sp.upload(
+                            url="https://nskkogyo.sharepoint.com/sites/shiga/Shared Documents/Forms/AllItems.aspx?id=/sites/shiga/Shared Documents/滋賀工場 製造データ",  # noqa
+                            files=downloads,
+                            steps=[
+                                re.compile(
+                                    rf"(?:{process_date.month}|{process_date.month:02d})月(?:{process_date.day}|{process_date.day:02d})日配送分"
+                                )
+                            ],
+                        )
                     elif row["出荷工場"] == "豊橋":  # Toyo
-                        pass
-                        # sp.upload(
-                        #     url="https://nskkogyo.sharepoint.com/sites/toyohashi/Shared Documents/Forms/AllItems.aspx?id=/sites/toyohashi/Shared Documents/豊橋工場 製造データ",  # noqa
-                        #     files=downloads,
-                        #     steps=[
-                        #         re.compile(
-                        #             rf"(?:{process_date.month}|{process_date.month:02d})月(?:{process_date.day}|{process_date.day:02d})日配送分"
-                        #         )
-                        #     ],
-                        # )
+                        sp.upload(
+                            url="https://nskkogyo.sharepoint.com/sites/toyohashi/Shared Documents/Forms/AllItems.aspx?id=/sites/toyohashi/Shared Documents/豊橋工場 製造データ",  # noqa
+                            files=downloads,
+                            steps=[
+                                re.compile(
+                                    rf"(?:{process_date.month}|{process_date.month:02d})月(?:{process_date.day}|{process_date.day:02d})日配送分"
+                                )
+                            ],
+                        )
                     elif row["出荷工場"] == "千葉":  # Chiba
-                        pass
-                        # sp.upload(
-                        #     url="https://nskkogyo.sharepoint.com/sites/nskhome/Shared Documents/Forms/AllItems.aspx?id=/sites/nskhome/Shared Documents/千葉工場 製造データ",  # noqa
-                        #     files=downloads,
-                        #     steps=[
-                        #         re.compile(
-                        #             rf"(?:{process_date.month}|{process_date.month:02d})月(?:{process_date.day}|{process_date.day:02d})日配送分"
-                        #         )
-                        #     ],
-                        # )
+                        sp.upload(
+                            url="https://nskkogyo.sharepoint.com/sites/nskhome/Shared Documents/Forms/AllItems.aspx?id=/sites/nskhome/Shared Documents/千葉工場 製造データ",  # noqa
+                            files=downloads,
+                            steps=[
+                                re.compile(
+                                    rf"(?:{process_date.month}|{process_date.month:02d})月(?:{process_date.day}|{process_date.day:02d})日配送分"
+                                )
+                            ],
+                        )
                     else:
                         APIClient.write(
                             siteId=DataShigaUp_SiteID,
@@ -389,5 +392,3 @@ def shiga_toyo_chiba(process_date: date | str):
                             data=[["Lỗi: kiểm tra cột 出荷工場"]],
                         )
                         break
-                    pass
-        
