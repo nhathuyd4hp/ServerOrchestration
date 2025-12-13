@@ -27,8 +27,15 @@ async def subscriber(*args):
         if message["type"] != 'message':
             continue
         channel: str = message['channel'].decode("utf-8")
-        data = message['data']
-        await manager.broadcast(str(data), channel)
+        raw = message['data']
+        if isinstance(raw, bytes):
+            data = raw.decode("utf-8")
+        else:
+            data = str(raw)
+        if channel == "CELERY":
+            await manager.broadcast(data)
+        else:
+            await manager.broadcast(data,channel)
 
 
 @asynccontextmanager
@@ -69,9 +76,9 @@ app.add_middleware(GlobalExceptionMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,  # Cho phép cookies/headers ủy quyền
-    allow_methods=["*"],  # Cho phép tất cả các phương thức HTTP (GET, POST, PUT, DELETE, v.v.)
-    allow_headers=["*"],  # Cho phép tất cả các tiêu đề HTTP
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(api, prefix=settings.ROOT_PATH)

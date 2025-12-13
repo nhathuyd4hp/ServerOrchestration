@@ -5,7 +5,7 @@ from fastapi import WebSocket
 
 
 class ConnectionManager:
-    def __init__(self, app_channel: str = "CELERY"):
+    def __init__(self, app_channel: str = "global"):
         self.app_channel = app_channel
         self.active_connections: Dict[str, List[WebSocket]] = {}
 
@@ -33,8 +33,5 @@ class ConnectionManager:
         for connection in self.active_connections.get(channel, []):
             with suppress(Exception):
                 await connection.send_text(str(message))
-                await connection.send_bytes()
-                await connection.send_json()
-
 
 manager = ConnectionManager()
