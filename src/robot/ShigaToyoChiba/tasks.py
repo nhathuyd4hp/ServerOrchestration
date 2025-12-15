@@ -4,13 +4,14 @@ import re
 import shutil
 import threading
 from datetime import datetime
-
+import redis
 import pandas as pd
 import xlwings as xw
 from celery import shared_task
 from filelock import FileLock
 from playwright.sync_api import sync_playwright
-
+from src.core.logger import Log
+from src.core.redis import REDIS_POOL
 from src.core.config import settings
 from src.robot.ShigaToyoChiba.api import APISharePoint
 from src.robot.ShigaToyoChiba.automation import SharePoint, WebAccess
@@ -58,8 +59,10 @@ def Fname(path: str):
             break
 
 
-@shared_task
-def shiga_toyo_chiba(process_date: datetime | str):
+@shared_task(bind=True)
+def shiga_toyo_chiba(self,process_date: datetime | str):
+    TaskID = self.request.id
+    logger = Log.get_logger(channel=TaskID, redis_client=redis.Redis(connection_pool=REDIS_POOL))
     with tempfile.TemporaryDirectory() as temp_dir:
         DataShigaUp_ItemID = None
         DataShigaUp_DriveID = None
@@ -72,6 +75,7 @@ def shiga_toyo_chiba(process_date: datetime | str):
         )
         if isinstance(process_date, str):
             process_date = datetime.strptime(process_date, "%Y-%m-%d %H:%M:%S.%f").date()
+        logger.info(f"Upload 3 xưởng: {process_date}")
         # ---- File Data
         FileData = f"DataShigaToyoChiba{process_date.strftime("%m-%d")}.xlsx"
         # ---- UP site
@@ -82,6 +86,7 @@ def shiga_toyo_chiba(process_date: datetime | str):
             breadcrumb=f"データUP一覧/{FileData}",
             save_to=os.path.join(temp_dir,FileData),
         ):  
+            logger.info("Download data from Access")
             with sync_playwright() as p:
                 browser = p.chromium.launch(headless=False, args=["--start-maximized"])
                 context = browser.new_context(no_viewport=True)
@@ -220,6 +225,7 @@ def shiga_toyo_chiba(process_date: datetime | str):
                                 data=[["Lỗi: kiểm tra cột 階"]],
                             )
                             break
+                        logger.info(row)
                         APIClient.write(
                             siteId=DataShigaUp_SiteID,
                             driveId=DataShigaUp_DriveID,
@@ -228,6 +234,7 @@ def shiga_toyo_chiba(process_date: datetime | str):
                             data=[["Đang xử lí"]],
                         )
                         # Get breadcrumb
+                        logger.info("Get breadcrumb")
                         url = row["資料リンク"]
                         breadcrumb = sp.get_breadcrumb(url)
                         if breadcrumb[-1].endswith("納材"):
@@ -241,6 +248,7 @@ def shiga_toyo_chiba(process_date: datetime | str):
                             break
                         download_path = os.path.join(temp_dir,str(int(row['案件番号'])))
                         shutil.rmtree(download_path, ignore_errors=True)
+                        logger.info("Download data")
                         downloads = sp.download(
                             url=url,
                             file=re.compile(r".*\.(xls|xlsx|xlsm|xlsb|xml|xlt|xltx|xltm|xlam|pdf)$", re.IGNORECASE),
@@ -265,6 +273,7 @@ def shiga_toyo_chiba(process_date: datetime | str):
                                 data=[["Lỗi: kiểm tra cột 出荷工場"]],
                             )
                             break
+                        logger.info("Count data")
                         # --- Kiểm tra số lượng file --- #
                         count_floor = len(row["階"].split(",")) if hasattr(row["階"], "split") else None
                         if count_floor is None:
@@ -302,6 +311,7 @@ def shiga_toyo_chiba(process_date: datetime | str):
                                 data=[[f"{len(excel_files)} file / {count_floor} floors"]],
                             )
                             break
+                        logger.info("Check filename")
                         # --- Kiểm tra tên file --- #
                         if any(row["物件名"] not in os.path.basename(download) for download in downloads):
                             APIClient.write(
@@ -331,6 +341,7 @@ def shiga_toyo_chiba(process_date: datetime | str):
                                     )
                             if os.listdir(download_path) == ["excel", "pdf"]:
                                 break
+                        logger.info("Run macro")
                         try:
                             with FileLock("macro.lock", timeout=300):
                                 app = xw.App(visible=False)
@@ -355,6 +366,7 @@ def shiga_toyo_chiba(process_date: datetime | str):
                             )
                             break
                         # --- Upload Data
+                        logger.info("Upload data")
                         upload_data = []
                         for dirpath, _, filenames in os.walk(download_path):
                             for filename in filenames:
