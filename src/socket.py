@@ -34,4 +34,5 @@ class ConnectionManager:
             with suppress(Exception):
                 await connection.send_text(str(message))
 
+
 manager = ConnectionManager()

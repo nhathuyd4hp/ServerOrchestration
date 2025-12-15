@@ -1,11 +1,11 @@
-import time
 import os
 import re
+import time
 from typing import List
-from urllib.parse import urlparse
-from pywinauto import Application, findwindows
+
 from playwright._impl._errors import TimeoutError
 from playwright.sync_api import Browser, BrowserContext, Playwright
+from pywinauto import Application, findwindows
 
 
 class SharePoint:
@@ -25,32 +25,30 @@ class SharePoint:
         self.playwright = playwright
         self.context = context
         self.browser = browser
+        self.page = self.context.new_page()
 
     def login(self) -> bool:
         try:
-            self.page = self.context.new_page()
             self.page.bring_to_front()
             self.page.goto(self.domain, wait_until="domcontentloaded")
-            if urlparse(self.page.url).netloc != urlparse(self.domain).netloc:
-                try:
-                    self.page.locator("input[type='email']").fill(self.username)
-                    self.page.locator(
-                        selector="input[type='submit']",
-                        has_text="Next",
-                    ).click()
-                    self.page.locator("input[type='password']").fill(self.password)
-                    self.page.locator(
-                        selector="input[type='submit']",
-                        has_text="Sign in",
-                    ).click()
-                    with self.page.expect_navigation(
-                        url=re.compile(f"^{self.domain}"),
-                        wait_until="load",
-                        timeout=30000,
-                    ):
-                        self.page.locator("input[type='submit']", has_text="Yes").click()
-                except TimeoutError:
-                    return False
+            self.page.locator("input[type='email']").fill(self.username)
+            self.page.locator(
+                selector="input[type='submit']",
+                has_text="Next",
+            ).click()
+            time.sleep(1)
+            self.page.locator("input[type='password']").fill(self.password)
+            self.page.locator(
+                selector="input[type='submit']",
+                has_text="Sign in",
+            ).click()
+            time.sleep(1)
+            with self.page.expect_navigation(
+                url=re.compile(f"^{self.domain}"),
+                wait_until="load",
+                timeout=30000,
+            ):
+                self.page.locator("input[type='submit']", has_text="Yes").click()
             while True:
                 try:
                     self.page.wait_for_selector("div[id='HeaderButtonRegion']", state="visible", timeout=10000)
@@ -172,7 +170,10 @@ class SharePoint:
                     state="visible",
                 )
             while True:
-                if self.page.locator("button[data-automationid='uploadCommand']").get_attribute("aria-expanded") == 'true':
+                if (
+                    self.page.locator("button[data-automationid='uploadCommand']").get_attribute("aria-expanded")
+                    == "true"
+                ):
                     self.page.locator("button[data-automationid='uploadFileCommand']").click()
                     time.sleep(0.5)
                     if self.page.locator("input[type='file']").count() == 1:
@@ -180,7 +181,6 @@ class SharePoint:
                 self.page.locator("button[data-automationid='uploadCommand']").click()
                 time.sleep(0.5)
             self.page.locator("input[type='file']").set_input_files(files)
-            time.sleep(2.5)
             while True:
                 if windows := findwindows.find_windows(title="Open"):
                     for window in windows:
@@ -192,6 +192,7 @@ class SharePoint:
                     else:
                         break
                 time.sleep(0.25)
+            time.sleep(2.5)
             return True
         except TimeoutError:
             return self.upload(url, files, steps)
@@ -207,24 +208,24 @@ class SharePoint:
             ]
         except TimeoutError:
             return self.get_breadcrumb(url)
-        
-    def rename_breadcrumb(self,url:str,new_name:str) -> bool:
+
+    def rename_breadcrumb(self, url: str, new_name: str) -> bool:
         try:
             self.page.bring_to_front()
             self.page.goto(url)
             self.page.locator("i[name='OpenPane']").click()
-            self.page.frame_locator("iframe[data-automationid='infoPane']").locator("button",has_text="Edit all").click()
+            self.page.frame_locator("iframe[data-automationid='infoPane']").locator(
+                "button", has_text="Edit all"
+            ).click()
             self.page.frame_locator("iframe[data-automationid='infoPane']").locator("input[type='text']").fill(new_name)
             self.page.frame_locator("iframe[data-automationid='infoPane']").locator(
                 "button[data-automationid='ReactClientFormSaveButton']",
                 has=self.page.frame_locator("iframe[data-automationid='infoPane']").locator(
                     "span",
                     has_text="Save",
-                )
+                ),
             ).click()
             time.sleep(5)
             return True
         except TimeoutError:
-            return self.rename_breadcrumb(url,new_name)
-
-
+            return self.rename_breadcrumb(url, new_name)

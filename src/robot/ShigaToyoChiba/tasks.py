@@ -1,21 +1,23 @@
-import tempfile
-import unicodedata
 import os
 import re
 import shutil
+import tempfile
 import threading
+import unicodedata
 from datetime import datetime
-import redis
+
 import pandas as pd
+import redis
 import xlwings as xw
 from celery import shared_task
 from filelock import FileLock
 from playwright.sync_api import sync_playwright
+
+from src.core.config import settings
 from src.core.logger import Log
 from src.core.redis import REDIS_POOL
-from src.core.config import settings
 from src.robot.ShigaToyoChiba.api import APISharePoint
-from src.robot.ShigaToyoChiba.automation import SharePoint, WebAccess
+from src.robot.ShigaToyoChiba.automation import PowerApp, SharePoint, WebAccess
 
 
 def Fname(path: str):
@@ -61,7 +63,7 @@ def Fname(path: str):
 
 
 @shared_task(bind=True)
-def shiga_toyo_chiba(self,process_date: datetime | str):
+def shiga_toyo_chiba(self, process_date: datetime | str):
     TaskID = self.request.id
     logger = Log.get_logger(channel=TaskID, redis_client=redis.Redis(connection_pool=REDIS_POOL))
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -85,8 +87,8 @@ def shiga_toyo_chiba(self,process_date: datetime | str):
         if not APIClient.download_item(
             site_id=UPSite.get("id"),
             breadcrumb=f"データUP一覧/{FileData}",
-            save_to=os.path.join(temp_dir,FileData),
-        ):  
+            save_to=os.path.join(temp_dir, FileData),
+        ):
             logger.info("Download data from Access")
             with sync_playwright() as p:
                 browser = p.chromium.launch(headless=False, args=["--start-maximized"])
@@ -127,12 +129,12 @@ def shiga_toyo_chiba(self,process_date: datetime | str):
                     orders.insert(loc=orders.columns.get_loc("物件名") + 1, column="R_Status", value="")
                     # Save File
                     orders = orders.sort_values(by="出荷工場").reset_index(drop=True)
-                    orders.to_excel(os.path.join(temp_dir,FileData), index=False)
+                    orders.to_excel(os.path.join(temp_dir, FileData), index=False)
                     # Upload to SharePoint
                     item = APIClient.upload_item(
                         site_id=UPSite.get("id"),
                         breadcrumb="データUP一覧",
-                        local_path=os.path.join(temp_dir,FileData),
+                        local_path=os.path.join(temp_dir, FileData),
                         replace=False,
                     )
                     DataShigaUp_ItemID = item.get("id")
@@ -142,7 +144,7 @@ def shiga_toyo_chiba(self,process_date: datetime | str):
             item = APIClient.upload_item(
                 site_id=UPSite.get("id"),
                 breadcrumb="データUP一覧",
-                local_path=os.path.join(temp_dir,FileData),
+                local_path=os.path.join(temp_dir, FileData),
                 replace=False,
             )
             DataShigaUp_ItemID = item.get("id")
@@ -153,21 +155,30 @@ def shiga_toyo_chiba(self,process_date: datetime | str):
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=False, args=["--start-maximized"])
             context = browser.new_context(no_viewport=True)
-            with SharePoint(
-                domain=settings.SHAREPOINT_DOMAIN,
-                username=settings.SHAREPOINT_EMAIL,
-                password=settings.SHAREPOINT_PASSWORD,
-                playwright=p,
-                browser=browser,
-                context=context,
-            ) as sp:
+            with (
+                SharePoint(
+                    domain=settings.SHAREPOINT_DOMAIN,
+                    username=settings.SHAREPOINT_EMAIL,
+                    password=settings.SHAREPOINT_PASSWORD,
+                    playwright=p,
+                    browser=browser,
+                    context=context,
+                ) as sp,
+                PowerApp(
+                    username=settings.POWER_APP_USERNAME,
+                    password=settings.POWER_APP_PASSWORD,
+                    playwright=p,
+                    browser=browser,
+                    context=context,
+                ) as pa,
+            ):
                 while True:
                     APIClient.download_item(
                         site_id=UPSite.get("id"),
                         breadcrumb=f"データUP一覧/{FileData}",
                         save_to=temp_dir,
                     )
-                    data = pd.read_excel(os.path.join(temp_dir,FileData))
+                    data = pd.read_excel(os.path.join(temp_dir, FileData))
                     #
                     cleaned_data = data[
                         ~data["得意先名"].isin(
@@ -247,7 +258,7 @@ def shiga_toyo_chiba(self,process_date: datetime | str):
                                 data=[["Tên folder có ghi ngày"]],
                             )
                             break
-                        download_path = os.path.join(temp_dir,str(int(row['案件番号'])))
+                        download_path = os.path.join(temp_dir, str(int(row["案件番号"])))
                         shutil.rmtree(download_path, ignore_errors=True)
                         logger.info("Download data")
                         downloads = sp.download(
@@ -290,7 +301,9 @@ def shiga_toyo_chiba(self,process_date: datetime | str):
                             [
                                 f
                                 for f in downloads
-                                if re.compile(r".*\.(xls|xlsx|xlsm|xlsb|xml|xlt|xltx|xltm|xlam)$", re.IGNORECASE).match(f)
+                                if re.compile(r".*\.(xls|xlsx|xlsm|xlsb|xml|xlt|xltx|xltm|xlam)$", re.IGNORECASE).match(
+                                    f
+                                )
                             ]
                         )
                         pdf_files = len([f for f in downloads if re.compile(r".*\.pdf$", re.IGNORECASE).match(f)])
@@ -317,7 +330,12 @@ def shiga_toyo_chiba(self,process_date: datetime | str):
                         # --- Kiểm tra tên file --- #
                         for downloaded in downloads:
                             downloaded_file = unicodedata.normalize("NFKC", downloaded)
-                            if not any(part in downloaded_file for part in re.split(r'[ \u3000・\u2018]+', unicodedata.normalize("NFKC", breadcrumb[-1]))):
+                            if not any(
+                                part in downloaded_file
+                                for part in re.split(
+                                    r"[ \u3000・\u2018]+", unicodedata.normalize("NFKC", breadcrumb[-1])
+                                )
+                            ):
                                 isError = True
                                 break
                         if isError:
@@ -336,7 +354,9 @@ def shiga_toyo_chiba(self,process_date: datetime | str):
                         while True:
                             for download in downloads:
                                 f = os.path.basename(download)
-                                if re.compile(r".*\.(xls|xlsx|xlsm|xlsb|xml|xlt|xltx|xltm|xlam)$", re.IGNORECASE).match(f):
+                                if re.compile(r".*\.(xls|xlsx|xlsm|xlsb|xml|xlt|xltx|xltm|xlam)$", re.IGNORECASE).match(
+                                    f
+                                ):
                                     shutil.move(
                                         src=download,
                                         dst=os.path.join(os.path.dirname(downloads[0]), "excel"),
@@ -441,10 +461,7 @@ def shiga_toyo_chiba(self,process_date: datetime | str):
                                 data=[["Lỗi: kiểm tra cột 出荷工場"]],
                             )
                             break
-                        sp.rename_breadcrumb(
-                            url = url,
-                            new_name = f"{breadcrumb[-1]} {suffix_name}" 
-                        )
+                        sp.rename_breadcrumb(url=url, new_name=f"{breadcrumb[-1]} {suffix_name}")
                         APIClient.write(
                             siteId=DataShigaUp_SiteID,
                             driveId=DataShigaUp_DriveID,
@@ -452,3 +469,62 @@ def shiga_toyo_chiba(self,process_date: datetime | str):
                             range=f"E{index+2}",
                             data=[["Chưa có trên Power App"]],
                         )
+                        # --- #
+                        up: bool = False
+                        if row["出荷工場"] == "滋賀":  # Shiga
+                            for p in list(
+                                set(
+                                    [
+                                        row["物件名"],
+                                        row["物件名"].replace("　", "").replace(" ", ""),
+                                    ]
+                                )
+                            ):
+                                up = pa.up(
+                                    process_date=f"{process_date.month}月{process_date.day}日",
+                                    factory="滋賀工場",
+                                    build=p,
+                                )
+                                if up:
+                                    break
+                        elif row["出荷工場"] == "豊橋":  # Toyo
+                            for p in list(
+                                set(
+                                    [
+                                        row["物件名"],
+                                        row["物件名"].replace("　", "").replace(" ", ""),
+                                    ]
+                                )
+                            ):
+                                up = pa.up(
+                                    process_date=f"{process_date.month}月{process_date.day}日",
+                                    factory="豊橋工場",
+                                    build=p,
+                                )
+                                if up:
+                                    break
+                        elif row["出荷工場"] == "千葉":  # Chiba
+                            for p in list(
+                                set(
+                                    [
+                                        row["物件名"],
+                                        row["物件名"].replace("　", "").replace(" ", ""),
+                                    ]
+                                )
+                            ):
+                                up = pa.up(
+                                    process_date=f"{process_date.month}月{process_date.day}日",
+                                    factory="千葉工場",
+                                    build=p,
+                                )
+                                if up:
+                                    break
+                        if up:
+                            APIClient.write(
+                                siteId=DataShigaUp_SiteID,
+                                driveId=DataShigaUp_DriveID,
+                                itemId=DataShigaUp_ItemID,
+                                range=f"E{index+2}",
+                                data=[["OK"]],
+                            )
+                        break

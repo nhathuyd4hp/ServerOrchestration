@@ -1,10 +1,9 @@
 from enum import StrEnum
 from typing import TYPE_CHECKING
-    
+
 from sqlmodel import Column, Field, Relationship, Text
 
 from src.model.base import Base
-
 
 if TYPE_CHECKING:
     from src.model.log import Log

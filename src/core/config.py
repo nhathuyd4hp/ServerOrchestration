@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     SHAREPOINT_DOMAIN: str
     SHAREPOINT_EMAIL: str
     SHAREPOINT_PASSWORD: str
+    # POWER APP
+    POWER_APP_USERNAME: str
+    POWER_APP_PASSWORD: str
     # MAIL DEALER
     MAIL_DEALER_USERNAME: str
     MAIL_DEALER_PASSWORD: str

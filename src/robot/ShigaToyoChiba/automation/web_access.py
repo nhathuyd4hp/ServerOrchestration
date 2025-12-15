@@ -22,6 +22,7 @@ class WebAccess:
         self.playwright = playwright
         self.context = context
         self.browser = browser
+        self.page = self.context.new_page()
 
     def __enter__(self):
         self.login()
@@ -33,7 +34,6 @@ class WebAccess:
 
     def login(self):
         try:
-            self.page = self.context.new_page()
             self.page.goto(self.domain)
             self.page.locator("input[type='text']").fill(self.username)
             self.page.locator("input[type='password']").fill(self.password)
