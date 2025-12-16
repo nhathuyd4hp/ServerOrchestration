@@ -1,4 +1,5 @@
 import time
+
 from playwright._impl._errors import TimeoutError
 from playwright.sync_api import Browser, BrowserContext, Playwright
 
@@ -89,7 +90,7 @@ https://www.nsk-cad.com/
 """
                 )
                 popup.locator("div[id='mailBoxAttachBox'] input[type='file']").set_input_files(file)
-                popup.locator("button",has_text="一時保存").click()
+                popup.locator("button", has_text="一時保存").click()
                 time.sleep(2.5)
                 popup.close()
                 return True

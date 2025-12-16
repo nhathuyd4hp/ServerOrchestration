@@ -4,10 +4,10 @@ import tempfile
 from datetime import datetime
 
 import pandas as pd
+import redis
 from celery import shared_task
 from playwright.sync_api import sync_playwright
 
-import redis
 from src.core.config import settings
 from src.core.logger import Log
 from src.core.redis import REDIS_POOL
@@ -102,7 +102,7 @@ def gui_ban_ve_toei(
                     # Kiểm tra địa chỉ gửi
                     mail_address = wa.mail_address(str(row["案件番号"]))
                     if mail_address is None:
-                        data.at[index, 'Result'] = "Không tìm thấy mail nhận"
+                        data.at[index, "Result"] = "Không tìm thấy mail nhận"
                         continue
                     downloads = sp.download(
                         url=row["資料リンク"],
