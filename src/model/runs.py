@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 class Status(StrEnum):
     CANCEL = "CANCEL"
+    WAITING = "WAITING"
     PENDING = "PENDING"
     FAILURE = "FAILURE"
     SUCCESS = "SUCCESS"
@@ -19,7 +20,7 @@ class Status(StrEnum):
 class Runs(Base, table=True):
     robot: str = Field(nullable=False)
     parameters: str | None = Field(default=None)
-    status: Status = Field(default=Status.PENDING)
+    status: Status = Field(default=Status.WAITING)
     result: str | None = Field(sa_column=Column(Text))
 
     logs: list["Log"] = Relationship(back_populates="run")
