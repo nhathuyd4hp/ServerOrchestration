@@ -66,7 +66,9 @@ class APISharePoint:
             headers={"Authorization": token},
         )
         site_id = response.json().get("id")
-        response = requests.get(url=f"https://graph.microsoft.com/v1.0/sites/{site_id}/drives", headers={"Authorization": token})
+        response = requests.get(
+            url=f"https://graph.microsoft.com/v1.0/sites/{site_id}/drives", headers={"Authorization": token}
+        )
         return response.json().get("value")
 
     def get_items_from_drive(self, drive_id: str) -> dict:
@@ -152,7 +154,11 @@ class APISharePoint:
 
             # Lấy danh sách các item trong folder
             children = (
-                requests.get(f"https://graph.microsoft.com/v1.0/drives/{drive_id}/items/{item_id}/children", headers=headers).json().get("value", [])
+                requests.get(
+                    f"https://graph.microsoft.com/v1.0/drives/{drive_id}/items/{item_id}/children", headers=headers
+                )
+                .json()
+                .get("value", [])
             )
 
             # Tải từng item trong thư mục
@@ -174,7 +180,7 @@ class APISharePoint:
                 for chunk in response.iter_content(chunk_size=8192):
                     if chunk:
                         f.write(chunk)
-        return drive_id,item_id
+        return drive_id, item_id
 
     def download_drive(
         self,
@@ -235,7 +241,9 @@ class APISharePoint:
         token = self._get_access_token()
         file_name = os.path.basename(local_path)
         # Lấy default drive của site
-        response = requests.get(url=f"https://graph.microsoft.com/v1.0/sites/{site_id}/drive", headers={"Authorization": token})
+        response = requests.get(
+            url=f"https://graph.microsoft.com/v1.0/sites/{site_id}/drive", headers={"Authorization": token}
+        )
         drive_id = response.json().get("id")
 
         # Ghép full path

@@ -63,7 +63,7 @@ class MailDealer:
                 popup = expect.value
                 popup.locator("button[class='accent-btn__btn']").first.click()
                 popup.locator("input[name='fFrom']").fill("ighd@nsk-cad.com")
-                # popup.locator("input[name='fTo[]']").fill(to)
+                popup.locator("input[name='fTo[]']").fill(to)
                 popup.locator("input[name='fSubject']").fill(subject)
                 iframe = popup.wait_for_selector("iframe")
                 iframe = iframe.content_frame()

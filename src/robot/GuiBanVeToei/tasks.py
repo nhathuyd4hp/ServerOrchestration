@@ -95,6 +95,7 @@ def gui_ban_ve_toei(
                 data = data[["案件番号", "得意先名", "物件名", "図面", "確定納期", "資料リンク"]].copy()
                 data["Result"] = pd.NA
                 for index, row in data.iterrows():
+                    logger.info(row)
                     # Kiểm tra nouki
                     if pd.isna(row["確定納期"]):
                         data.at[index, "Result"] = "Không có nouki"

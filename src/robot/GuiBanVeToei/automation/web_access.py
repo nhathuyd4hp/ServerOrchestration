@@ -65,7 +65,8 @@ class WebAccess:
             detailLink = detailLinks[0]
             urljoin(self.domain, detailLink)
             self.page.goto(urljoin(self.domain, detailLink))
-            mail_address = self.page.locator("input[id='builder_person_2_mail_addr']").text_content()
+            time.sleep(2.5)
+            mail_address = self.page.locator("input[id='builder_person_2_mail_addr']").get_attribute("value")
             if mail_address == "":
                 return None
             return mail_address
@@ -147,8 +148,8 @@ class WebAccess:
                 self.page.locator("select[id='project_drawing']").select_option("CB送付済")
             else:
                 return False
-            self.page.locator("button[id='order_update']").click()
-            time.sleep(2.5)
+            self.page.locator("button[id='order_update']").first.click()
+            time.sleep(5)
             return True
         except TimeoutError:
             return self.update_state(current_state)
