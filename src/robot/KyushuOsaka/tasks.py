@@ -417,7 +417,8 @@ def kyushu_osaka(
                             data=[["Chưa có trên Power App"]],
                             sheet="データUP状況",
                         )
-
+                    if row["出荷工場"] == "大阪":
+                        break  # Osaka không nhấn app
                     for building in list(
                         set(
                             [
@@ -428,7 +429,7 @@ def kyushu_osaka(
                     ):
                         if pa.up(
                             process_date=f"{process_date.month}月{process_date.day}日",
-                            factory="九州工場" if row["出荷工場"] == "九州" else "大阪工場",
+                            factory="九州工場",
                             build=building,
                         ):
                             api.write(
