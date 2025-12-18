@@ -120,13 +120,22 @@ def kyushu_osaka(
     files = [(file.get("id"), file.get("name")) for file in files]
     # --- #
     if (
-        len([name for _, name in files if isinstance(name, str) and name.lower().endswith((".xls", ".xlsx", ".xlsm"))])
+        len(
+            [
+                (id, name)
+                for id, name in files
+                if isinstance(name, str) and name.lower().endswith((".xls", ".xlsx", ".xlsm"))
+            ]
+        )
         != 1
     ):
         raise FileNotFoundError("Không xác định được file data")
     # --- #
-    item_id = files[0][0]
-    item_name = files[0][1]
+    temp_file = [
+        (id, name) for id, name in files if isinstance(name, str) and name.lower().endswith((".xls", ".xlsx", ".xlsm"))
+    ]
+    item_id = temp_file[0][0]
+    item_name = temp_file[0][1]
     # --- #
     macro_file = "src/robot/KyushuOsaka/resource/マクロチェック(240819ver).xlsm"
 
@@ -346,6 +355,7 @@ def kyushu_osaka(
                             steps=[
                                 re.compile("^九州工場 製造データー$"),
                                 re.compile(f"{int(process_date.month)}月{int(process_date.day)}日配送分"),
+                                re.compile(r"^確定データ\(データ確定日11時半以降はフォルダの外へUP\)$"),
                             ],
                         ):
                             api.write(
