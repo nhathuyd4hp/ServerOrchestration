@@ -1,8 +1,9 @@
 import asyncio
 import json
+import os
 import time
+from collections import defaultdict
 from contextlib import asynccontextmanager, suppress
-from datetime import datetime
 
 import redis.asyncio as redis
 from apscheduler.triggers.cron import CronTrigger
@@ -16,7 +17,6 @@ from src.api.middleware import GlobalExceptionMiddleware
 from src.api.router import api
 from src.core.config import settings
 from src.core.redis import Async_Redis_POOL
-from src.model import Log
 from src.scheduler import scheduler
 from src.service import ResultService, ScheduleService
 from src.socket import manager
@@ -29,17 +29,23 @@ async def save_logs(logs: list[dict]) -> None:
     if not logs:
         return
     #
-    with Session(settings.db_engine) as session:
-        for log in logs:
-            session.add(
-                Log(
-                    run_id=log.get("run_id"),
-                    timestamp=log.get("timestamp"),
-                    level=log.get("level"),
-                    message=log.get("message"),
-                )
-            )
-        session.commit()
+    grouped_logs = defaultdict(list)
+    for log in logs:
+        run_id = log.get("run_id", "unknown")
+        grouped_logs[run_id].append(log)
+    loop = asyncio.get_running_loop()
+    await loop.run_in_executor(None, _write_to_files_sync, grouped_logs)
+
+
+def _write_to_files_sync(grouped_logs: dict):
+    for run_id, log_entries in grouped_logs.items():
+        safe_filename = str(run_id).replace("/", "_").replace("\\", "_")
+        file_path = os.path.join("logs", f"{safe_filename}.log")
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with suppress(Exception):
+            with open(file_path, "a", encoding="utf-8") as f:
+                for log in log_entries:
+                    f.write(json.dumps(log) + "\n")
 
 
 async def log_collector(
@@ -88,7 +94,7 @@ async def subscriber(*args):
             await LOG_QUEUE.put(
                 {
                     "run_id": task_id,
-                    "timestamp": datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S,%f"),
+                    "timestamp": timestamp,
                     "level": level,
                     "message": message.strip(),
                 }

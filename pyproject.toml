@@ -11,6 +11,7 @@ dependencies = [
     "cryptography>=46.0.3",
     "easyocr>=1.7.2",
     "fastapi[standard]>=0.121.3",
+    "httpx>=0.28.1",
     "minio>=7.2.20",
     "openpyxl>=3.1.5",
     "pandas>=2.3.3",
@@ -25,6 +26,7 @@ dependencies = [
     "sqlmodel>=0.0.27",
     "torch>=2.9.1",
     "transformers>=4.57.3",
+    "validators>=0.35.0",
     "xlsxwriter>=3.2.9",
     "xlwings>=0.33.16",
 ]
