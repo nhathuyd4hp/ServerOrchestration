@@ -181,6 +181,9 @@ class SharePoint:
                 self.page.locator("button[data-automationid='uploadCommand']").click()
                 time.sleep(0.5)
             self.page.locator("input[type='file']").set_input_files(files)
+            self.page.wait_for_selector(
+                "div[class^='toastInnerContainer-'] i[data-icon-name='Cancel']", state="visible", timeout=30000
+            )
             time.sleep(0.25)
             while True:
                 if windows := findwindows.find_windows(title="Open"):
@@ -193,10 +196,6 @@ class SharePoint:
                     else:
                         break
                 time.sleep(0.25)
-            self.page.wait_for_selector(
-                "div[class^='toastInnerContainer-'] i[data-icon-name='Cancel']", state="visible", timeout=30000
-            )
-            time.sleep(0.25)
             return True
         except TimeoutError:
             return self.upload(url, files, steps)
