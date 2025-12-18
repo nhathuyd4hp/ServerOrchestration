@@ -1,11 +1,31 @@
+from typing import TYPE_CHECKING
+
 import redis
 from celery import signals
+from celery.result import AsyncResult
+from celery.worker.consumer.consumer import Consumer
 from sqlmodel import Session, select
 
 from src.core.config import settings
 from src.core.redis import REDIS_POOL
 from src.model import Runs
 from src.model.runs import Status
+
+if TYPE_CHECKING:
+    pass
+
+
+@signals.worker_ready.connect
+def start_up(sender: Consumer, **kwargs):
+    with Session(settings.db_engine) as session:
+        statement = select(Runs).where(Runs.status == Status.PENDING)
+        records: list[Runs] = session.exec(statement).all()
+        for record in records:
+            result = AsyncResult(id=record.id, app=sender.app)
+            if result.state == "PENDING":
+                record.status = Status.CANCEL
+                session.add(record)
+        session.commit()
 
 
 @signals.task_prerun.connect
