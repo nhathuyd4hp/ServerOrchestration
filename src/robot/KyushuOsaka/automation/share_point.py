@@ -235,9 +235,12 @@ class SharePoint:
             return True
         except TimeoutError:
             if self.page.frame_locator("iframe[data-automationid='infoPane']").locator(":scope").count() == 0:
-                self.page.locator("input[type='text']").fill(new_name)
-                time.sleep(0.25)
-                self.page.locator("button[data-automationid='ReactClientFormSaveButton']").click()
-                time.sleep(4.75)
-                return True
+                try:
+                    self.page.locator("input[type='text']").fill(new_name)
+                    time.sleep(0.25)
+                    self.page.locator("button[data-automationid='ReactClientFormSaveButton']").click()
+                    time.sleep(4.75)
+                    return True
+                except TimeoutError:
+                    return False
             return self.rename_breadcrumb(url, new_name)
