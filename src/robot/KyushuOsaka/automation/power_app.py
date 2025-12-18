@@ -69,11 +69,11 @@ class PowerApp:
                 )
                 while True:
                     if dropdown.get_attribute("aria-expanded") == "true":
-                        time.sleep(1 / 3)
+                        time.sleep(0.25)
                         break
                     dropdown.click()
-                    time.sleep(1 / 3)
-                time.sleep(1 / 3)
+                    time.sleep(0.25)
+                time.sleep(0.25)
                 for j in range(
                     self.page.frame_locator("iframe[class='player-app-frame']").locator("div[role='option']").count()
                 ):
@@ -82,14 +82,14 @@ class PowerApp:
                     )
                     if option.text_content() in [process_date, factory] and option.is_visible():
                         option.click()
-                        time.sleep(1 / 3)
+                        time.sleep(0.25)
                         break
             self.page.frame_locator("iframe[class='player-app-frame']").locator("input[placeholder='案件検索']").clear()
-            time.sleep(1 / 3)
+            time.sleep(0.25)
             self.page.frame_locator("iframe[class='player-app-frame']").locator("input[placeholder='案件検索']").fill(
                 build
             )
-            time.sleep(2 / 3)
+            time.sleep(0.75)
             if self.page.frame_locator("iframe[class='player-app-frame']").locator("div[role='listitem']").count() != 1:
                 return False
             content = (

@@ -229,7 +229,15 @@ class SharePoint:
                     has_text="Save",
                 ),
             ).click()
-            time.sleep(5)
+            self.page.frame_locator("iframe[data-automationid='infoPane']").locator(
+                "button", has_text="Edit all"
+            ).wait_for(state="attached")
             return True
         except TimeoutError:
+            if self.page.frame_locator("iframe[data-automationid='infoPane']").locator(":scope").count() == 0:
+                self.page.locator("input[type='text']").fill(new_name)
+                time.sleep(0.25)
+                self.page.locator("button[data-automationid='ReactClientFormSaveButton']").click()
+                time.sleep(4.75)
+                return True
             return self.rename_breadcrumb(url, new_name)

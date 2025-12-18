@@ -172,7 +172,7 @@ def kyushu_osaka(
                 playwright=p,
                 browser=browser,
                 context=context,
-            ),
+            ) as pa,
             tempfile.TemporaryDirectory() as temp_dir,
         ):
             while True:
@@ -407,6 +407,7 @@ def kyushu_osaka(
                             data=[["Chưa có trên Power App | Lỗi: đổi tên folder"]],
                             sheet="データUP状況",
                         )
+                        break
                     else:
                         api.write(
                             site_id=file.get("site_id"),
@@ -416,4 +417,35 @@ def kyushu_osaka(
                             data=[["Chưa có trên Power App"]],
                             sheet="データUP状況",
                         )
+
+                    for building in list(
+                        set(
+                            [
+                                row["物件名"],
+                                row["物件名"].replace("\u3000", "").replace(" ", ""),
+                            ]
+                        )
+                    ):
+                        if pa.up(
+                            process_date=f"{process_date.month}月{process_date.day}日",
+                            factory="九州工場" if row["出荷工場"] == "九州" else "大阪工場",
+                            build=building,
+                        ):
+                            api.write(
+                                site_id=file.get("site_id"),
+                                drive_id=drive_id,
+                                item_id=file.get("item_id"),
+                                range=f"E{index}",
+                                data=[["OK"]],
+                                sheet="データUP状況",
+                            )
+                            api.write(
+                                site_id=file.get("site_id"),
+                                drive_id=drive_id,
+                                item_id=file.get("item_id"),
+                                range=f"Q{index}",
+                                data=[["UP"]],
+                                sheet="データUP状況",
+                            )
+                            break
                     break
