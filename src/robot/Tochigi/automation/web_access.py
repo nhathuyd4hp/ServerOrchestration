@@ -1,6 +1,7 @@
-import pandas as pd
 import os
 from datetime import date
+
+import pandas as pd
 from playwright._impl._errors import TimeoutError
 from playwright.sync_api import Browser, BrowserContext, Playwright
 
@@ -48,21 +49,21 @@ class WebAccess:
         if self.browser:
             self.browser.close()
 
-    def download_data(self,process_date: date):
+    def download_data(self, process_date: date):
         try:
             self.page.bring_to_front()
             with self.page.expect_navigation(wait_until="domcontentloaded"):
                 self.page.locator("a[class='fa fa-industry']").click()
             # Clear
             # Filter
-            self.page.locator("input[name='search_fix_deliver_date_from']").fill(str(process_date).replace("-","/"))
-            self.page.locator("input[name='search_fix_deliver_date_to']").fill(str(process_date).replace("-","/"))
+            self.page.locator("input[name='search_fix_deliver_date_from']").fill(str(process_date).replace("-", "/"))
+            self.page.locator("input[name='search_fix_deliver_date_to']").fill(str(process_date).replace("-", "/"))
             while True:
                 factory = self.page.locator("button[id='multi_factory_cd_ms']")
                 if factory.text_content() == "栃木":
                     break
                 factory.click()
-                self.page.locator("label[for^='ui-multiselect-1-multi_factory_cd-']",has_text="栃木").check()
+                self.page.locator("label[for^='ui-multiselect-1-multi_factory_cd-']", has_text="栃木").check()
                 factory.click()
             # Search
             with self.page.expect_navigation(wait_until="networkidle"):
@@ -78,5 +79,3 @@ class WebAccess:
             return orders
         except TimeoutError:
             return self.download_data(process_date)
-
-    

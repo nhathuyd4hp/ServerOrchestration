@@ -248,7 +248,7 @@ def tochigi(self, process_date: datetime | str):
                             site_id=DataTochigi_SiteID,
                             drive_id=DataTochigi_DriveID,
                             item_id=DataTochigi_ItemID,
-                            range=f"J{upload_file_index+2}",
+                            range=f"G{upload_file_index+2}",
                             data=[["Đang xử lí"]],
                         ):
                             break
@@ -273,7 +273,7 @@ def tochigi(self, process_date: datetime | str):
                                 site_id=DataTochigi_SiteID,
                                 drive_id=DataTochigi_DriveID,
                                 item_id=DataTochigi_ItemID,
-                                range=f"J{upload_file_index+2}",
+                                range=f"G{upload_file_index+2}",
                                 data=[["Lỗi link"]],
                             ):
                                 break
@@ -285,7 +285,7 @@ def tochigi(self, process_date: datetime | str):
                                 site_id=DataTochigi_SiteID,
                                 drive_id=DataTochigi_DriveID,
                                 item_id=DataTochigi_ItemID,
-                                range=f"J{upload_file_index+2}",
+                                range=f"G{upload_file_index+2}",
                                 data=[["Tên folder có ghi ngày"]],
                             ):
                                 break
@@ -309,7 +309,7 @@ def tochigi(self, process_date: datetime | str):
                         downloads = api.download_drive(
                             drive_id=drive_id,
                             breadcrumb=path,
-                            save_to=os.path.join(temp_dir, 案件番号),
+                            save_to=os.path.join(temp_dir, str(int(案件番号))),
                         )
                         counts: list[str] = [filepath for _, filepath, _ in downloads]
                         floors: int = 2 if 階 == "-" else len(階.split(","))
@@ -323,7 +323,7 @@ def tochigi(self, process_date: datetime | str):
                                     site_id=DataTochigi_SiteID,
                                     drive_id=DataTochigi_DriveID,
                                     item_id=DataTochigi_ItemID,
-                                    range=f"J{upload_file_index+2}",
+                                    range=f"G{upload_file_index+2}",
                                     data=[["Không đủ data"]],
                                 ):
                                     break
@@ -380,7 +380,7 @@ def tochigi(self, process_date: datetime | str):
                                     site_id=DataTochigi_SiteID,
                                     drive_id=DataTochigi_DriveID,
                                     item_id=DataTochigi_ItemID,
-                                    range=f"J{upload_file_index+2}",
+                                    range=f"G{upload_file_index+2}",
                                     data=[["Lỗi macro"]],
                                 ):
                                     break
@@ -413,7 +413,7 @@ def tochigi(self, process_date: datetime | str):
                                         site_id=DataTochigi_SiteID,
                                         drive_id=DataTochigi_DriveID,
                                         item_id=DataTochigi_ItemID,
-                                        range=f"J{upload_file_index+2}",
+                                        range=f"G{upload_file_index+2}",
                                         data=[["Chưa có trên Power App"]],
                                     ):
                                         break
