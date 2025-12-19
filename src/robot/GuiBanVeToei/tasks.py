@@ -88,8 +88,7 @@ def gui_ban_ve_toei(
             ):
                 logger.info("Tải dữ liệu từ WebAccess")
                 data = wa.download_data(
-                    from_date=datetime.strptime(process_date, "%Y-%m-%d %H:%M:%S.%f").strftime("%Y/%m/%d"),
-                    to_date=datetime.strptime(process_date, "%Y-%m-%d %H:%M:%S.%f").strftime("%Y/%m/%d"),
+                    process_date=datetime.strptime(process_date, "%Y-%m-%d %H:%M:%S.%f").strftime("%Y/%m/%d"),
                 )
                 data = data[["案件番号", "得意先名", "物件名", "図面", "確定納期", "資料リンク"]].copy()
                 data["Result"] = pd.NA

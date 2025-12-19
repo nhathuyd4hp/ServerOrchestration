@@ -76,8 +76,7 @@ class WebAccess:
 
     def download_data(
         self,
-        from_date: str,
-        to_date: str,
+        process_date: str,
     ) -> pd.DataFrame:
         try:
             self.page.bring_to_front()
@@ -86,8 +85,7 @@ class WebAccess:
             # Lọc theo công trình
             self.page.locator("input[name='search_builder_name_like']").fill("東栄住宅")
             # Theo ngày
-            self.page.locator("input[name='search_fix_deliver_date_from']").fill(from_date)
-            self.page.locator("input[name='search_fix_deliver_date_to']").fill(to_date)
+            self.page.locator("input[name='search_fix_deliver_date_from']").fill(process_date)
             # Theo trạng thái
             self.page.locator("button[id='search_drawing_type_ms']").click()
             for drawing in ["作図済", "CBUP済"]:
@@ -118,7 +116,7 @@ class WebAccess:
                 os.remove(save_path)
                 return orders
         except TimeoutError:
-            return self.download_data(from_date, to_date)
+            return self.download_data(process_date)
 
     def update_state(self, case: str, current_state: str) -> bool:
         try:
