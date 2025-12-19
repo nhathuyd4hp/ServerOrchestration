@@ -242,7 +242,6 @@ def tochigi(self, process_date: datetime | str):
                 if data["R_Status"].notna().all():
                     break
                 for upload_file_index, row in data.iterrows():
-                    logger.info(f"Index: {upload_file_index}")
                     if pd.notna(row["R_Status"]):
                         continue
                     # ---- Đánh dấu bot đang xử lí dòng/bài này ----
@@ -257,6 +256,7 @@ def tochigi(self, process_date: datetime | str):
                             break
                         time.sleep(0.5)
                     案件番号, _, _, _, 階, 資料リンク, _ = row[:7]
+                    logger.info(案件番号)
                     if pd.isna(階):
                         logger.warning("Không xác định số tầng")
                         while True:
@@ -298,6 +298,7 @@ def tochigi(self, process_date: datetime | str):
                             time.sleep(0.5)
                         break
                     while True:
+                        logger.info("download data")
                         if os.path.exists(os.path.abspath(f"downloads/{案件番号}")):
                             shutil.rmtree(os.path.abspath(f"downloads/{案件番号}"))
                         downloads = sp.download(
@@ -315,6 +316,7 @@ def tochigi(self, process_date: datetime | str):
                         excel_count = sum(1 for f in counts if f.lower().endswith(excel_exts))
                         if not has_pdf or excel_count < floors:
                             while True:
+                                logger.warning("Không đủ data")
                                 if api.write(
                                     site_id=DataTochigi_SiteID,
                                     drive_id=DataTochigi_DriveID,
