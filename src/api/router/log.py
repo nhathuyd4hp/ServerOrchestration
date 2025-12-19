@@ -18,7 +18,7 @@ async def streaming(run_id:str):
             if line:
                 yield f"data: {line}\n"
             else:
-                await asyncio.sleep(5)
+                await asyncio.sleep(2.5)
 
 @router.get("/{run_id}")
 async def log_realtime(run_id: str):
