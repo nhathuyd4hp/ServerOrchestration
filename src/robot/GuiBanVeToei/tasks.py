@@ -18,8 +18,7 @@ from src.service import ResultService as minio
 @shared_task(bind=True)
 def gui_ban_ve_toei(
     self,
-    from_date: datetime,
-    to_date: datetime,
+    process_date: datetime,
 ):
     TaskID = self.request.id
     logger = Log.get_logger(channel=TaskID, redis_client=redis.Redis(connection_pool=REDIS_POOL))
@@ -58,7 +57,7 @@ def gui_ban_ve_toei(
     https://www.nsk-cad.com/
     ***************************************
     """
-    logger.info(f"Chạy với tham số: {from_date} - {to_date}")
+    logger.info(f"Chạy với tham số: {process_date}")
     with tempfile.TemporaryDirectory() as temp_dir:
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=False, args=["--start-maximized"])
@@ -89,8 +88,8 @@ def gui_ban_ve_toei(
             ):
                 logger.info("Tải dữ liệu từ WebAccess")
                 data = wa.download_data(
-                    from_date=datetime.strptime(from_date, "%Y-%m-%d %H:%M:%S.%f").strftime("%Y/%m/%d"),
-                    to_date=datetime.strptime(to_date, "%Y-%m-%d %H:%M:%S.%f").strftime("%Y/%m/%d"),
+                    from_date=datetime.strptime(process_date, "%Y-%m-%d %H:%M:%S.%f").strftime("%Y/%m/%d"),
+                    to_date=datetime.strptime(process_date, "%Y-%m-%d %H:%M:%S.%f").strftime("%Y/%m/%d"),
                 )
                 data = data[["案件番号", "得意先名", "物件名", "図面", "確定納期", "資料リンク"]].copy()
                 data["Result"] = pd.NA
