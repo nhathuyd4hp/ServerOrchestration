@@ -11,11 +11,9 @@ router = APIRouter(prefix="/logs", tags=["Log"])
 async def streaming(run_id: str):
     file_path = f"logs/{run_id}.log"
     if not os.path.exists(file_path):
-        yield "data: Log file not found.\n"
         return
     async with aiofiles.open(file_path, mode="r", encoding="utf-8") as f:
         while True:
-            # Đọc từng dòng
             line = await f.readline()
             if line:
                 yield f"{line}\n"
