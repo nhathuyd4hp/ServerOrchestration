@@ -298,7 +298,7 @@ def kyushu_osaka(
                             drive_id=drive_id,
                             item_id=file.get("item_id"),
                             range=f"E{index}",
-                            data=[[f"{len(excel_files)} file / {count_floor} floors"]],
+                            data=[[f"{excel_files} file / {count_floor} floors"]],
                             sheet="データUP状況",
                         )
                         break
