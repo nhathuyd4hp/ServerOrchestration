@@ -132,6 +132,7 @@ def gui_ban_ve_toei(
                         logger.warning("Gửi mail thất bại")
                         data.at[index, "Result"] = "Gửi mail thất bại"
                         continue
+                    logger.info("Cập nhật WebAccess")
                     if not wa.update_state(case=str(row["案件番号"]), current_state=str(row["図面"])):
                         logger.warning("Đã gửi mail | Cập nhật WebAccess lỗi")
                         data.at[index, "Result"] = "Đã gửi mail | Cập nhật WebAccess lỗi"
