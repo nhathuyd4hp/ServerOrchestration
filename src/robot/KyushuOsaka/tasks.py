@@ -374,7 +374,7 @@ def kyushu_osaka(
                             steps=[
                                 re.compile("^九州工場 製造データー$"),
                                 re.compile(f"{int(process_date.month)}月{int(process_date.day)}日配送分"),
-                                re.compile(r"^確定データ\(データ確定日11時半以降はフォルダの外へUP\)$"),
+                                re.compile(r"^確定データ\(.+\)$"),
                             ],
                         ):
                             api.write(

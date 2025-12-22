@@ -406,7 +406,7 @@ def shiga_toyo_chiba(self, process_date: datetime | str):
                                     re.compile(
                                         rf"(?:{process_date.month}|{process_date.month:02d})月(?:{process_date.day}|{process_date.day:02d})日配送分"
                                     ),
-                                    re.compile(r"^確定データ\(データ確定日11時半以降はフォルダの外へUP\)$"),
+                                    re.compile(r"^確定データ\(.+\)$"),
                                 ],
                             ):
                                 APIClient.write(
@@ -425,7 +425,7 @@ def shiga_toyo_chiba(self, process_date: datetime | str):
                                     re.compile(
                                         rf"(?:{process_date.month}|{process_date.month:02d})月(?:{process_date.day}|{process_date.day:02d})日配送分"
                                     ),
-                                    re.compile(r"^確定データ\(データ確定日11時半以降はフォルダの外へUP\)$"),
+                                    re.compile(r"^確定データ\(.+\)$"),
                                 ],
                             ):
                                 APIClient.write(
@@ -444,7 +444,7 @@ def shiga_toyo_chiba(self, process_date: datetime | str):
                                     re.compile(
                                         rf"(?:{process_date.month}|{process_date.month:02d})月(?:{process_date.day}|{process_date.day:02d})日配送分"
                                     ),
-                                    re.compile(r"^確定データ\(データ確定日11時半以降はフォルダの外へUP\)$"),
+                                    re.compile(r"^確定データ\(.+\)$"),
                                 ],
                             ):
                                 APIClient.write(

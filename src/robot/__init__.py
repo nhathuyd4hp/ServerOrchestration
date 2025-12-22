@@ -5,3 +5,4 @@ from src.robot.Tochigi import tasks  # noqa
 from src.robot.DrawingClassic import tasks  # noqa
 from src.robot.SeikyuOnline import tasks  # noqa
 from src.robot.Sakura import tasks  # noqa
+from src.robot.SeikyuNgoaiHanwa import tasks  # noqa
