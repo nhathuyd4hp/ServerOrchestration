@@ -66,7 +66,9 @@ class APISharePoint:
             headers={"Authorization": token},
         )
         site_id = response.json().get("id")
-        response = requests.get(url=f"https://graph.microsoft.com/v1.0/sites/{site_id}/drives", headers={"Authorization": token})
+        response = requests.get(
+            url=f"https://graph.microsoft.com/v1.0/sites/{site_id}/drives", headers={"Authorization": token}
+        )
         return response.json().get("value")
 
     def get_items_from_drive(self, drive_id: str) -> dict:
@@ -217,7 +219,9 @@ class APISharePoint:
         token = self._get_access_token()
         file_name = os.path.basename(local_path)
         # Lấy default drive của site
-        response = requests.get(url=f"https://graph.microsoft.com/v1.0/sites/{site_id}/drive", headers={"Authorization": token})
+        response = requests.get(
+            url=f"https://graph.microsoft.com/v1.0/sites/{site_id}/drive", headers={"Authorization": token}
+        )
         drive_id = response.json().get("id")
 
         # Ghép full path

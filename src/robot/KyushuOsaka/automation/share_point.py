@@ -163,12 +163,19 @@ class SharePoint:
                     return False
                 text = span.text_content()
                 span.click()
-                self.page.locator(
-                    selector="div[type='button'][data-automationid='breadcrumb-crumb']:visible",
-                    has_text=text,
-                ).wait_for(
-                    state="visible",
-                )
+                try:
+                    self.page.locator(
+                        selector="div[type='button'][data-automationid='breadcrumb-crumb']:visible",
+                        has_text=text,
+                    ).wait_for(
+                        state="visible",
+                    )
+                except TimeoutError:
+                    if not self.page.locator(
+                        selector="div[type='button'][data-automationid='breadcrumb-crumb']",
+                        has_text=text,
+                    ).count():
+                        return self.upload(url, files, steps)
             while True:
                 if (
                     self.page.locator("button[data-automationid='uploadCommand']").get_attribute("aria-expanded")

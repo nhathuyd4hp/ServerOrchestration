@@ -208,8 +208,8 @@ def tochigi(self, process_date: datetime | str):
             else:
                 logger.info("Download data")
                 data = WebAccess(
-                    username="hanh0704",
-                    password="159753",
+                    username=settings.WEBACCESS_USERNAME,
+                    password=settings.WEBACCESS_PASSWORD,
                     playwright=p,
                     browser=browser,
                     context=context,
