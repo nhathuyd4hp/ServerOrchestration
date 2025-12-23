@@ -49,15 +49,15 @@ class WebAccess:
         if self.browser:
             self.browser.close()
 
-    def download_data(self, from_date: date, to_date: date):
+    def download_data(self, process_date: date):
         try:
             self.page.bring_to_front()
             with self.page.expect_navigation(wait_until="domcontentloaded"):
                 self.page.locator("a[class='fa fa-industry']").click()
             # Clear
             # Filter
-            self.page.locator("input[name='search_fix_deliver_date_from']").fill(str(from_date).replace("-", "/"))
-            self.page.locator("input[name='search_fix_deliver_date_to']").fill(str(to_date).replace("-", "/"))
+            self.page.locator("input[name='search_fix_deliver_date_from']").fill(str(process_date).replace("-", "/"))
+            self.page.locator("input[name='search_fix_deliver_date_to']").fill(str(process_date).replace("-", "/"))
             while True:
                 factory = self.page.locator("button[id='multi_factory_cd_ms']")
                 if factory.text_content() == "栃木":
@@ -78,4 +78,4 @@ class WebAccess:
             os.remove(save_path)
             return orders
         except TimeoutError:
-            return self.download_data(from_date, to_date)
+            return self.download_data(process_date)
