@@ -73,7 +73,7 @@ def get_price(excelPath: str) -> float:
             row = " ".join(row.replace("nan", "").split())
             if match := re.search(r"小\s*.*\s*計.*?(\d+(?:,\d{3})*(?:\.\d+)?)", row):
                 return float(match.group(1)), match.group(), index + 1, sheet
-    return 0
+    return 0, None, None, None
 
 
 @shared_task(
@@ -126,6 +126,8 @@ def seikyu_online(self, sheet_name: API | str = "/api/type/seikyu-online"):
             data.index = data.index + 1  # Index bắt đầu từ 1
             # ---- #
             for index, row in data.iterrows():
+                if index != 117:
+                    continue
                 LinkData: str = row["Y"]
                 if not validators.url(LinkData):
                     continue
