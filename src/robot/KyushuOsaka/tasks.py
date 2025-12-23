@@ -69,6 +69,7 @@ def kyushu_osaka(
     process_date: datetime,
     kyushu: bool | str = True,
     osaka: bool | str = True,
+    up_trong: bool | str = False,
 ):
     TaskID = self.request.id
     logger = Log.get_logger(channel=TaskID, redis_client=redis.Redis(connection_pool=REDIS_POOL))
@@ -90,6 +91,13 @@ def kyushu_osaka(
             osaka = True
         else:
             osaka = False
+    if isinstance(up_trong, str):
+        if up_trong.lower() == "false":
+            up_trong = False
+        elif up_trong.lower() == "true":
+            up_trong = True
+        else:
+            up_trong = False
     # -------------
     factory = []
     if kyushu:
@@ -368,14 +376,20 @@ def kyushu_osaka(
                         break
                     logger.info("Up data")
                     if row["出荷工場"] == "九州":
+                        path = [
+                            re.compile("^九州工場 製造データー$"),
+                            re.compile(f"{int(process_date.month)}月{int(process_date.day)}日配送分"),
+                            re.compile(r"^確定データ\(.+\)$"),
+                        ]
+                        if not up_trong:
+                            path = [
+                                re.compile("^九州工場 製造データー$"),
+                                re.compile(f"{int(process_date.month)}月{int(process_date.day)}日配送分"),
+                            ]
                         if not sp.upload(
                             url="https://nskkogyo.sharepoint.com/sites/kyuusyuukouzyou",
                             files=[f for f in Path(download_path).rglob("*") if f.is_file()],
-                            steps=[
-                                re.compile("^九州工場 製造データー$"),
-                                re.compile(f"{int(process_date.month)}月{int(process_date.day)}日配送分"),
-                                re.compile(r"^確定データ\(.+\)$"),
-                            ],
+                            steps=path,
                         ):
                             api.write(
                                 site_id=file.get("site_id"),
