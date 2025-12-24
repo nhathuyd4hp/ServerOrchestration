@@ -1,0 +1,80 @@
+import json
+import logging
+from enum import StrEnum
+from typing import Tuple, Union
+
+import pandas as pd
+import requests
+
+
+class GoogleSheet:
+    def __init__(
+        self, application_scripts_url: str, timeout: int = 5, log_name: str = __name__
+    ):
+        self.application_scripts_url = application_scripts_url
+        self.timeout = timeout
+        self.logger = logging.getLogger(log_name)
+        self.client = requests.Session()
+        self.client.headers.update(
+            {"Content-Type": "application/json"},
+        )
+
+    def getSheet(
+        self, sheet_id: Union[StrEnum, str]
+    ) -> Tuple[str, pd.DataFrame] | None:
+        """
+        Args:
+            sheet_id (_type_): sheet_id:any
+        Returns:
+            Tuple[str,pd.DataFrame]: sheet_name, data
+            None: None
+        """
+        try:
+            if isinstance(sheet_id, StrEnum):
+                sheet_id = sheet_id.value
+
+            response = self.client.get(
+                url=f"{self.application_scripts_url}?gid={sheet_id}",
+                timeout=self.timeout*5,
+            )
+
+            if response.status_code == 200:
+                content = json.loads(response.content.decode("utf-8"))
+                if "error" in content:
+                    self.logger.error(content["error"])
+                    return None
+                else:
+                    # ------- #
+                    columns = content["data"][0]
+                    data = content["data"][1:]
+                    sheet_name = content["sheet_name"]
+                    # ------- #
+                    sheet = pd.DataFrame(data, columns=columns)
+                    # ------- #
+                    sheet["background"] = [
+                        background for background in content["backgrounds"][1:]
+                    ]
+                    return (sheet_name, sheet)
+            else:
+                self.logger.error("Lỗi đọc dữ liệu từ Google Sheet")
+                return None
+        except requests.exceptions.ReadTimeout as e:
+            self.logger.error(e)
+            return self.getSheet(sheet_id)
+
+    def setColor(
+        self, sheet_id: Union[StrEnum, str], row: int, color: Union[StrEnum, str]
+    ) -> bool:
+        sheet_id = sheet_id.value if isinstance(sheet_id, StrEnum) else sheet_id
+        color = color.value if isinstance(color, StrEnum) else color
+        response = self.client.post(
+            url=self.application_scripts_url,
+            json={
+                "method": "PUT",
+                "sheet_id": sheet_id,
+                "row": row,
+                "color": color,
+            },
+        )
+        result = "success" in response.text
+        return result
