@@ -1,3 +1,4 @@
+import os
 import re
 import time
 
@@ -47,7 +48,7 @@ class WebAccessMeta(IWebDriverMeta):
 class MailDealer(IWebDriver, metaclass=WebAccessMeta):
     def __init__(self, username: str, password: str, **kwargs):
         super().__init__(**kwargs)
-        self.url = "https://webaccess.nsk-cad.com/"
+        self.url = "https://mds3310.maildealer.jp/"
         self._username = username
         self._password = password
         self.authenticated = self._authentication(self._username, self._password)
@@ -358,6 +359,8 @@ class MailDealer(IWebDriver, metaclass=WebAccessMeta):
             ).send_keys(attachment)
             # Wait
             time.sleep(2.5)
+            self.browser.find_element(By.XPATH, f"//a[contains(text(), '{os.path.basename(attachment)}')]")
+            time.sleep(0.5)
             self.logger.info(f"Đính kèm file: {attachment} thành công")
         # ----- Edit (Abstract) ----- #
         ToEmail = self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[name='fTo[]']")))
