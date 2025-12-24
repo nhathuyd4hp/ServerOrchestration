@@ -356,7 +356,8 @@ class MailDealer(IWebDriver, metaclass=WebAccessMeta):
             self.wait.until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='file'][multiple]"))
             ).send_keys(attachment)
-            time.sleep(1)
+            # Wait
+            time.sleep(2.5)
             self.logger.info(f"Đính kèm file: {attachment} thành công")
         # ----- Edit (Abstract) ----- #
         ToEmail = self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[name='fTo[]']")))

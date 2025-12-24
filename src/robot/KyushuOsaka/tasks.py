@@ -405,7 +405,7 @@ def kyushu_osaka(
                             url="https://nskkogyo.sharepoint.com/sites/yanase/Shared Documents/Forms/AllItems.aspx?id=/sites/yanase/Shared Documents/大阪工場　製造データ",  # noqa: E501
                             files=[f for f in Path(download_path).rglob("*") if f.is_file()],
                             steps=[
-                                re.compile(rf"^{process_date.month}(月|日){process_date.day}日$"),
+                                re.compile(rf"^{process_date.month:02d}(月|日){process_date.day:02d}日$"),
                                 re.compile(r"^🔹関西工場確定データ🔹"),
                             ],
                         ):
