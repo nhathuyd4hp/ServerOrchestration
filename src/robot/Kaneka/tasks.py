@@ -1,18 +1,19 @@
-from selenium import webdriver
-import tempfile
-from src.core.logger import Log
-from src.core.redis import REDIS_POOL
-from celery import shared_task
-import redis
 import os
+import tempfile
 import time
-from datetime import datetime
 from enum import StrEnum
 from urllib.parse import urljoin
-import pandas as pd
-from src.robot.Kaneka.common.decorator import error_handling
+
+import redis
+from celery import shared_task
+from selenium import webdriver
+
 from src.core.config import settings
-from src.robot.Kaneka.service import GoogleSheet,MailDealer,SharePoint
+from src.core.logger import Log
+from src.core.redis import REDIS_POOL
+from src.robot.Kaneka.common.decorator import error_handling
+from src.robot.Kaneka.service import GoogleSheet, MailDealer, SharePoint
+
 
 class ColorMapping(StrEnum):
     YELLOW = "#ffff00"
@@ -31,7 +32,7 @@ class SheetMapping(StrEnum):
         return self.value
 
 
-@shared_task(bind=True)
+@shared_task(bind=True, name="Kaneka")
 @error_handling()
 def main(self):
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -51,7 +52,9 @@ def main(self):
                 "safebrowsing.enabled": True,
             },
         )
-        APPLICATION_SCRIPTS_URL: str = "https://script.google.com/macros/s/AKfycbwUY_GGn7fsoQCr9Ouq9vz2DIADaEf-hNYtUcwRTM0xNYsJhE_b3HbYFisWnA_CRMDI/exec"
+        APPLICATION_SCRIPTS_URL: str = (
+            "https://script.google.com/macros/s/AKfycbwUY_GGn7fsoQCr9Ouq9vz2DIADaEf-hNYtUcwRTM0xNYsJhE_b3HbYFisWnA_CRMDI/exec"
+        )
         # --- Common --- #
         logger = Log.get_logger(channel=self.request.id, redis_client=redis.Redis(connection_pool=REDIS_POOL))
         # --- Services --- #
@@ -68,9 +71,7 @@ def main(self):
             options=options,
             log_name="SharePoint",
         )
-        GS = GoogleSheet(
-            application_scripts_url=APPLICATION_SCRIPTS_URL, log_name="GoogleSheet"
-        )
+        GS = GoogleSheet(application_scripts_url=APPLICATION_SCRIPTS_URL, log_name="GoogleSheet")
         mails: list[dict] = []
         for sid in SheetMapping:
             _, sheet = GS.getSheet(sid)
@@ -80,9 +81,7 @@ def main(self):
             for ID in MAIL_IDS:
                 sheet_based_on_id = sheet[sheet["ID MAIL"] == ID]
                 backgrounds: list[list[str]] = sheet_based_on_id["background"].to_list()
-                if all(
-                    background[0] == ColorMapping.BLUE.value for background in backgrounds
-                ):
+                if all(background[0] == ColorMapping.BLUE.value for background in backgrounds):
                     mails.append(
                         {
                             "mail_id": ID,
@@ -92,9 +91,7 @@ def main(self):
                             "type": 1,
                         }
                     )
-                if all(
-                    background[0] == ColorMapping.GREEN.value for background in backgrounds
-                ):
+                if all(background[0] == ColorMapping.GREEN.value for background in backgrounds):
                     mails.append(
                         {
                             "mail_id": ID,
@@ -147,13 +144,13 @@ def main(self):
             if mail["type"] == 2 and mail.get("sheet_name") != "KENTEC_1_T1_T6":
                 mail_id: str = mail.get("mail_id")
                 url, searchData = SP.search(
-                    site_url=urljoin(settings.SHAREPOINT_DOMAIN,"/sites/2021/Shared Documents/は行/KANEKA JOB"),
-                    keyword=mail_id.split("-")[0]
+                    site_url=urljoin(settings.SHAREPOINT_DOMAIN, "/sites/2021/Shared Documents/は行/KANEKA JOB"),
+                    keyword=mail_id.split("-")[0],
                 )
                 if not url or searchData.empty:
                     continue
-                has_pdf = any(fp.lower().endswith(('.pdf', '.PDF')) for fp in searchData["Name"].to_list())
-                has_excel = any(fp.lower().endswith(('.xlsm', '.xlsx')) for fp in searchData["Name"].to_list())
+                has_pdf = any(fp.lower().endswith((".pdf", ".PDF")) for fp in searchData["Name"].to_list())
+                has_excel = any(fp.lower().endswith((".xlsm", ".xlsx")) for fp in searchData["Name"].to_list())
                 if not (has_pdf and has_excel):
                     continue
                 for _ in range(5):
@@ -161,10 +158,10 @@ def main(self):
                         site_url=url,
                         file_pattern=".*.(pdf|xlsm|xlsx|PDF|xls)$",
                     ):
-                        has_pdf = any(fp.lower().endswith(('.pdf', '.PDF')) for fp, _ in download_files)
-                        has_excel = any(fp.lower().endswith(('.xlsm', '.xlsx')) for fp, _ in download_files)
+                        has_pdf = any(fp.lower().endswith((".pdf", ".PDF")) for fp, _ in download_files)
+                        has_excel = any(fp.lower().endswith((".xlsm", ".xlsx")) for fp, _ in download_files)
                         if not (has_pdf and has_excel):
-                            for fp,_ in download_files:
+                            for fp, _ in download_files:
                                 os.remove(fp)
                                 time.sleep(1)
                             continue

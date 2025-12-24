@@ -24,11 +24,7 @@ def retry_if_exception(
     def decorator(func):
         @functools.wraps(func)
         def wrapper(self, *args, **kwargs):
-            logger: logging.Logger = (
-                getattr(self, "logger")
-                if hasattr(self, "logger")
-                else logging.getLogger(__name__)
-            )
+            logger: logging.Logger = self.logger if hasattr(self, "logger") else logging.getLogger(__name__)
             retries = 0
             while True:
                 try:
@@ -37,9 +33,7 @@ def retry_if_exception(
                     retries += 1
                     if retries > max_retries:
                         msg = e.msg if hasattr(e, "msg") else str(e)
-                        logger.error(
-                            f"{func.__name__} failed after {max_retries} retries: {msg}"
-                        )
+                        logger.error(f"{func.__name__} failed after {max_retries} retries: {msg}")
                         return failure_return
                     logger.error(f"RETRY: {func.__name__}, failed: {type(e).__name__}")
                     time.sleep(delay)

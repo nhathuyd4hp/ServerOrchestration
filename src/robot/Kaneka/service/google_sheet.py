@@ -8,9 +8,7 @@ import requests
 
 
 class GoogleSheet:
-    def __init__(
-        self, application_scripts_url: str, timeout: int = 5, log_name: str = __name__
-    ):
+    def __init__(self, application_scripts_url: str, timeout: int = 5, log_name: str = __name__):
         self.application_scripts_url = application_scripts_url
         self.timeout = timeout
         self.logger = logging.getLogger(log_name)
@@ -19,9 +17,7 @@ class GoogleSheet:
             {"Content-Type": "application/json"},
         )
 
-    def getSheet(
-        self, sheet_id: Union[StrEnum, str]
-    ) -> Tuple[str, pd.DataFrame] | None:
+    def getSheet(self, sheet_id: Union[StrEnum, str]) -> Tuple[str, pd.DataFrame] | None:
         """
         Args:
             sheet_id (_type_): sheet_id:any
@@ -35,7 +31,7 @@ class GoogleSheet:
 
             response = self.client.get(
                 url=f"{self.application_scripts_url}?gid={sheet_id}",
-                timeout=self.timeout*5,
+                timeout=self.timeout * 5,
             )
 
             if response.status_code == 200:
@@ -51,9 +47,7 @@ class GoogleSheet:
                     # ------- #
                     sheet = pd.DataFrame(data, columns=columns)
                     # ------- #
-                    sheet["background"] = [
-                        background for background in content["backgrounds"][1:]
-                    ]
+                    sheet["background"] = [background for background in content["backgrounds"][1:]]
                     return (sheet_name, sheet)
             else:
                 self.logger.error("Lỗi đọc dữ liệu từ Google Sheet")
@@ -62,9 +56,7 @@ class GoogleSheet:
             self.logger.error(e)
             return self.getSheet(sheet_id)
 
-    def setColor(
-        self, sheet_id: Union[StrEnum, str], row: int, color: Union[StrEnum, str]
-    ) -> bool:
+    def setColor(self, sheet_id: Union[StrEnum, str], row: int, color: Union[StrEnum, str]) -> bool:
         sheet_id = sheet_id.value if isinstance(sheet_id, StrEnum) else sheet_id
         color = color.value if isinstance(color, StrEnum) else color
         response = self.client.post(

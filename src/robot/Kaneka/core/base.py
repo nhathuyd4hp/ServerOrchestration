@@ -49,9 +49,7 @@ class IWebDriver(ABC, metaclass=IWebDriverMeta):
         self.logger.setLevel(log_level)
         self.root_window = self.browser.window_handles[0]
         self.authenticated = False
-        self.download_directory = self.options.experimental_options.get(
-            "prefs", {}
-        ).get(
+        self.download_directory = self.options.experimental_options.get("prefs", {}).get(
             "download.default_directory",
             os.path.join(os.path.expanduser("~"), "Downloads"),
         )
@@ -72,9 +70,7 @@ class IWebDriver(ABC, metaclass=IWebDriverMeta):
         time.sleep(self.retry_interval)
         self.browser.get(url)
         if wait_for_complete:
-            while (
-                self.browser.execute_script("return document.readyState") != "complete"
-            ):
+            while self.browser.execute_script("return document.readyState") != "complete":
                 time.sleep(self.retry_interval)
                 continue
         time.sleep(self.retry_interval)
@@ -93,9 +89,7 @@ class IWebDriver(ABC, metaclass=IWebDriverMeta):
     def wait_for_download_to_start(self) -> list[str]:
         while True:
             downloading_files = [
-                filename
-                for filename in os.listdir(self.download_directory)
-                if filename.endswith(".crdownload")
+                filename for filename in os.listdir(self.download_directory) if filename.endswith(".crdownload")
             ]
             if downloading_files:
                 return downloading_files
@@ -154,4 +148,4 @@ class IWebDriver(ABC, metaclass=IWebDriverMeta):
         )
         self.browser.close()
         self.browser.switch_to.window(self.root_window)
-        return os.path.join(self.download_directory,name), tag
+        return os.path.join(self.download_directory, name), tag
