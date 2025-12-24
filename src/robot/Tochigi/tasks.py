@@ -162,7 +162,7 @@ def tochigi(self, process_date: datetime | str):
     logger = Log.get_logger(channel=TaskID, redis_client=redis.Redis(connection_pool=REDIS_POOL))
     logger.info(f"Upload Tochigi: {process_date}")
     # ----- Resource File ----- #
-    macro_file = "src/robot/Tochigi/resource/マクロチェック(240819ver).xlsm"
+    macro_file = "src/resource/マクロチェック(240819ver).xlsm"
     # ----- Process ----- #
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False, args=["--start-maximized"])
@@ -345,7 +345,7 @@ def tochigi(self, process_date: datetime | str):
                                 shutil.move(filepath, new_path)
                                 temp.append(new_path)
                         logger.info("Chạy macro")
-                        with FileLock("macro_tochigi.lock", timeout=300):
+                        with FileLock(os.path.join("src/resource","macro.lock"), timeout=300):
                             try:
                                 app = xw.App(visible=False)
                                 wb_macro = app.books.open(macro_file)

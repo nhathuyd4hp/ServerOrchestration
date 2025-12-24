@@ -351,7 +351,7 @@ def kyushu_osaka(
                             break
                     logger.info("Chạy macro")
                     try:
-                        with FileLock("macro.lock", timeout=300):
+                        with FileLock(os.path.join("src/resource","macro.lock"), timeout=300):
                             app = xw.App(visible=False)
                             wb_macro = app.books.open(macro_file)
                             threading.Thread(

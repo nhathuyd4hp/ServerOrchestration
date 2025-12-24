@@ -382,9 +382,9 @@ def shiga_toyo_chiba(
                                 break
                         logger.info("Run macro")
                         try:
-                            with FileLock("macro.lock", timeout=300):
+                            with FileLock(os.path.join("src/resource","macro.lock"), timeout=300):
                                 app = xw.App(visible=False)
-                                macro_file = "src/robot/ShigaToyoChiba/resource/マクロチェック(240819ver).xlsm"
+                                macro_file = "src/resource/マクロチェック(240819ver).xlsm"
                                 wb_macro = app.books.open(macro_file)
                                 threading.Thread(
                                     target=Fname, args=(os.path.abspath(os.path.join(download_path, "excel")),)
