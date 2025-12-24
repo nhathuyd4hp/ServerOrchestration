@@ -186,7 +186,6 @@ def tochigi(self, process_date: datetime | str):
                 CLIENT_SECRET=settings.API_SHAREPOINT_CLIENT_SECRET,
             )
             UP = api.get_site("UP")
-            Mouka = api.get_site("mouka")
             DataTochigi_ItemID = None
             DataTochigi_DriveID = None
             DataTochigi_SiteID = None
@@ -389,37 +388,17 @@ def tochigi(self, process_date: datetime | str):
                         # Upload
                         logger.info("Up data")
                         downloads: list[str] = temp
-                        納品日 = f"{int(month):02d}月{int(day):02d}日"
-                        while True:
-                            up: list[dict] = []
-                            for f in os.listdir(pdf_dir):
-                                up.append(
-                                    api.upload_item(
-                                        site_id=Mouka.get("id"),
-                                        local_path=os.path.join(pdf_dir, f),
-                                        breadcrumb=f"真岡工場　製造データ/{納品日}/栃木工場確定データ",
-                                    )
-                                )
-                            for f in os.listdir(excel_dir):
-                                up.append(
-                                    api.upload_item(
-                                        site_id=Mouka.get("id"),
-                                        local_path=os.path.join(excel_dir, f),
-                                        breadcrumb=f"真岡工場　製造データ/{納品日}/栃木工場確定データ",
-                                    )
-                                )
-                            if all("error" not in item for item in up):
-                                while True:
-                                    if api.write(
-                                        site_id=DataTochigi_SiteID,
-                                        drive_id=DataTochigi_DriveID,
-                                        item_id=DataTochigi_ItemID,
-                                        range=f"G{upload_file_index+2}",
-                                        data=[["Chưa có trên Power App"]],
-                                    ):
-                                        break
-                                    time.sleep(0.5)
-                                break
+                        sp.upload(
+                            url="https://nskkogyo.sharepoint.com/sites/mouka/Shared%20Documents/Forms/AllItems.aspx?id=/sites/mouka/Shared%20Documents/%E7%9C%9F%E5%B2%A1%E5%B7%A5%E5%A0%B4%E3%80%80%E8%A3%BD%E9%80%A0%E3%83%87%E3%83%BC%E3%82%BF",
+                            steps=[
+                                re.compile(rf"^0?{int(month)}月0?{int(day)}日$"),
+                                re.compile("^栃木工場確定データ$"),
+                            ],
+                            files=(
+                                [os.path.join(pdf_dir, f) for f in os.listdir(pdf_dir)]
+                                + [os.path.join(excel_dir, f) for f in os.listdir(excel_dir)]
+                            ),
+                        )
                         logger.info("Đổi tên")
                         suffix = f"{month}-{day}納材"
                         sp.rename_breadcrumb(
