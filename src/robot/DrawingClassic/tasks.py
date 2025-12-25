@@ -59,7 +59,7 @@ def gui_ban_ve_xac_nhan_classic(self):
             logger.info(orders.shape)
             orders["Result"] = pd.NA
             # ---- #
-            for index, row in orders.head(5).iterrows():
+            for index, row in orders.iterrows():
                 _, _, 物件名, 確定納期, 担当2, 資料リンク, _ = row
                 logger.info(f"{物件名} - {確定納期} - {担当2} - {資料リンク}")
                 if pd.isna(物件名):

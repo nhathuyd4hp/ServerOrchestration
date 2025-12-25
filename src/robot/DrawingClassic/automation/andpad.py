@@ -75,10 +75,10 @@ class AndPad:
                     popup.wait_for_load_state(state="networkidle", timeout=10000)
                 count_message = popup.locator("p[class='chat-message-text']").count()
                 list_message = [
-                    repr(popup.locator("p[class='chat-message-text']").nth(i).text_content())
-                    for i in range(count_message)
+                    popup.locator("p[class='chat-message-text']").nth(i).text_content() for i in range(count_message)
                 ]
                 if any(repr(msg.strip()) == repr(message.strip()) for msg in list_message):
+                    popup.close()
                     return "Tin nhắn đã được gửi trước đó"
                 message_box = popup.wait_for_selector("textarea[placeholder='メッセージを入力']", state="visible")
                 message_box.fill("")
@@ -89,7 +89,7 @@ class AndPad:
                     if popup.locator("span[class='label-chat-to__delete']:visible").count() == 0:
                         break
                     popup.locator("span[class='label-chat-to__delete']:visible").nth(0).click()
-                    time.sleep(0.5)
+                    time.sleep(1)
                 if tags:
                     for tag in tags:
                         popup.locator("button", has=popup.locator("span", has_text="お知らせ")).click()
@@ -108,12 +108,12 @@ class AndPad:
                     if popup.locator("span[class='chat-to__label']:visible").count() != 3:
                         popup.close()
                         return self.send_message(object_name, message)
-                time.sleep(0.5)
+                time.sleep(1)
                 # Click
                 popup.locator(selector="wc-tsukuri-text", has_text="送信").click()
-                time.sleep(2.5)
+                time.sleep(4.5)
                 popup.locator("input[type='file'][data-test='input-document']").set_input_files(attachments)
-                time.sleep(2.5)
+                time.sleep(4.5)
                 popup.close()
                 return True
         except TimeoutError:
