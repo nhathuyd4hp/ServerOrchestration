@@ -224,3 +224,4 @@ results/
 # Lock file
 *.lock
 *.exe
+*.txt

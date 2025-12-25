@@ -8,3 +8,4 @@ from src.robot.Sakura import tasks  # noqa
 from src.robot.SeikyuNgoaiHanwa import tasks  # noqa
 from src.robot.OHDMITSUMORI import tasks  # noqa
 from src.robot.Kaneka import tasks  # noqa
+from src.robot.TamaNouhinsumi import tasks  # noqa
