@@ -9,7 +9,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.ui import WebDriverWait
 
-from src.robot.Kaneka.common.decorator import retry_if_exception
+from src.common.decorator import retry_if_exception
 
 
 class IWebDriverMeta(ABCMeta):

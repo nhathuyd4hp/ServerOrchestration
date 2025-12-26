@@ -4,6 +4,7 @@ from contextlib import suppress
 from playwright._impl._errors import TimeoutError
 from playwright.sync_api import sync_playwright
 
+
 class MailDealer:
     def __init__(
         self,
@@ -100,7 +101,9 @@ class MailDealer:
                 ).click()
                 page = popup.value
                 page.wait_for_function("window.location.href != 'about:blank'")
-                page.locator(selector="select[name='fCategoryID'][class='listbox']").select_option("To/From設定なし(nskhome@nsk-cad.com)")
+                page.locator(selector="select[name='fCategoryID'][class='listbox']").select_option(
+                    "To/From設定なし(nskhome@nsk-cad.com)"
+                )
                 page.locator(selector="select[name='fHeaderFooter'][class='listbox']").select_option("署名なし")
                 with page.expect_navigation(
                     wait_until="domcontentloaded",
@@ -153,8 +156,12 @@ class MailDealer:
                 break
             main_iframe.locator("button[title='一括操作']").click()
             main_iframe.locator("div[class='pop-panel__content'] input[id='fMatterID_add']").fill(fMatterID)
-            main_iframe.locator("div[class='pop-panel__content'] input[name='fAddMatterRelByMGID'] + div.checkbox__indicator").check()
-            main_iframe.locator("div[class='pop-panel__content'] input[id='fMatterID_add'] + button", has_text="関連付ける").click()
+            main_iframe.locator(
+                "div[class='pop-panel__content'] input[name='fAddMatterRelByMGID'] + div.checkbox__indicator"
+            ).check()
+            main_iframe.locator(
+                "div[class='pop-panel__content'] input[id='fMatterID_add'] + button", has_text="関連付ける"
+            ).click()
             time.sleep(2.5)
             return True
         except TimeoutError:

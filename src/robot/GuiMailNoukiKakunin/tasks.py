@@ -1,22 +1,25 @@
-from datetime import datetime
 import os
 import tempfile
+from datetime import datetime
+
 import pandas as pd
-from src.service import ResultService as minio
-from playwright.sync_api import sync_playwright
 import redis
+from celery import shared_task
+from playwright.sync_api import sync_playwright
+
 from src.core.config import settings
 from src.core.logger import Log
 from src.core.redis import REDIS_POOL
-from celery import shared_task
 from src.robot.GuiMailNoukiKakunin.api import APISharePoint
 from src.robot.GuiMailNoukiKakunin.automation import MailDealer
+from src.service import ResultService as minio
 
-@shared_task(bind=True,name="Gửi Mail Nouki Kakunin")
+
+@shared_task(bind=True, name="Gửi Mail Nouki Kakunin")
 def main(self):
     logger = Log.get_logger(channel=self.request.id, redis_client=redis.Redis(connection_pool=REDIS_POOL))
     with tempfile.TemporaryDirectory() as temp_dir:
-    # Download
+        # Download
         sapi = APISharePoint(
             TENANT_ID=settings.API_SHAREPOINT_TENANT_ID,
             CLIENT_ID=settings.API_SHAREPOINT_CLIENT_ID,
@@ -31,7 +34,9 @@ def main(self):
             io=database_path,
             sheet_name="メール",
         )
-    database = database[(pd.notna(database["案件番号"])) & (pd.notna(database["得意先名"])) & (pd.notna(database["物件名"]))]
+    database = database[
+        (pd.notna(database["案件番号"])) & (pd.notna(database["得意先名"])) & (pd.notna(database["物件名"]))
+    ]
     database["CC先"] = database["CC先"].replace(0, pd.NA)
     database["確定納期"] = pd.to_datetime(database["確定納期"], unit="d", origin="1899-12-30")
     database["確定納期"] = database["確定納期"].apply(lambda x: f"{x.month}月{x.day}日" if pd.notna(x) else pd.NA)

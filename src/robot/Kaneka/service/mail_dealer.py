@@ -13,8 +13,8 @@ from selenium.common.exceptions import (
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
-from src.robot.Kaneka.common.decorator import retry_if_exception
-from src.robot.Kaneka.core import IWebDriver, IWebDriverMeta
+from src.common.decorator import retry_if_exception
+from src.core import IWebDriver, IWebDriverMeta
 
 
 class WebAccessMeta(IWebDriverMeta):
@@ -46,9 +46,9 @@ class WebAccessMeta(IWebDriverMeta):
 
 
 class MailDealer(IWebDriver, metaclass=WebAccessMeta):
-    def __init__(self, username: str, password: str, **kwargs):
+    def __init__(self, url: str, username: str, password: str, **kwargs):
         super().__init__(**kwargs)
-        self.url = "https://mds3310.maildealer.jp/"
+        self.url = url
         self._username = username
         self._password = password
         self.authenticated = self._authentication(self._username, self._password)
@@ -207,28 +207,6 @@ class MailDealer(IWebDriver, metaclass=WebAccessMeta):
             body = self.wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
             return body.text
 
-    @retry_if_exception()
-    def get_status(self, mail_id: int | str) -> str:
-        self.logger.info(f"Đọc Mail {mail_id}")
-        inputSearch = self.wait.until(
-            EC.element_to_be_clickable(
-                (
-                    By.CSS_SELECTOR,
-                    'input[placeholder="このメールボックスのメール・電話を検索"]',
-                )
-            )
-        )
-        inputSearch.clear()
-        time.sleep(self.retry_interval)
-        inputSearch.send_keys(mail_id)
-        time.sleep(self.retry_interval)
-        self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[title="検索"]'))).click()
-        time.sleep(self.retry_interval)
-        while self.browser.find_elements(By.CSS_SELECTOR, "div[class='loader']"):
-            time.sleep(self.retry_interval)
-            continue
-        pass
-
     @retry_if_exception(
         exceptions=(
             StaleElementReferenceException,
@@ -357,7 +335,6 @@ class MailDealer(IWebDriver, metaclass=WebAccessMeta):
             self.wait.until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='file'][multiple]"))
             ).send_keys(attachment)
-            # Wait
             time.sleep(2.5)
             self.browser.find_element(By.XPATH, f"//a[contains(text(), '{os.path.basename(attachment)}')]")
             time.sleep(0.5)

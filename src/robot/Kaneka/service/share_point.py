@@ -14,8 +14,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from src.robot.Kaneka.common.decorator import retry_if_exception
-from src.robot.Kaneka.core import IWebDriver
+from src.common.decorator import retry_if_exception
+from src.core import IWebDriver
 
 
 class SharePoint(IWebDriver):
