@@ -63,7 +63,12 @@ def Fname(path: str):
             break
 
 
-@shared_task(bind=True, name="Kyushu Osaka")
+@shared_task(
+    bind=True,
+    name="Kyushu Osaka",
+    soft_time_limit=55 * 60,
+    time_limit=60 * 60,
+)
 def kyushu_osaka(
     self,
     process_date: datetime,

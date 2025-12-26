@@ -153,7 +153,7 @@ def MicrosoftExcel():
             break
 
 
-@shared_task(bind=True, name="Tochigi")
+@shared_task(bind=True, name="Tochigi", soft_time_limit=55 * 60, time_limit=60 * 60)
 def tochigi(self, process_date: datetime | str):
     if isinstance(process_date, str):
         process_date = datetime.strptime(process_date, "%Y-%m-%d %H:%M:%S.%f").date()
