@@ -37,6 +37,7 @@ def task_prerun_handler(sender=None, task_id=None, **kwargs):
                     id=task_id,
                     robot=sender.name,
                     parameters=kwargs.get("kwargs") if kwargs.get("kwargs") else None,
+                    status=Status.PENDING,
                 )
             )
         session.commit()
